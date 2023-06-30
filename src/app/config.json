@@ -1,0 +1,20 @@
+{
+  "name": "hpgps filemanager",
+  "supportEmail": "israel.margulies@highpointgps.com",
+  "version": "0.0.1",
+  "items": [{
+    "url": "hpgpsFilemanager.html",
+    "path": "",
+    "menuName": {
+      "en": "hpgps filemanager"
+    },
+    "icon": "images/icon.svg"
+  }],
+  
+  "dev": {
+    "root": "hpgpsFilemanager",
+    "dist": {
+      "host": "https://www.example.com/myaddin/"
+    }
+  }
+}

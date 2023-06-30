@@ -1,0 +1,75 @@
+.radioButton {
+	padding: 0.25rem;
+}
+
+.errorText {
+	color: red;
+}
+
+.successText {
+	color: green;
+}
+
+@keyframes spinner {
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
+}
+.loading-spinner {
+	width: 50px;
+	height: 50px;
+	border: 10px solid #f3f3f3; /* Light grey */
+	border-top: 10px solid #2c7ab1; /* Black */
+	border-radius: 50%;
+	animation: spinner 1.5s linear infinite;
+}
+
+.upload-input {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	gap: 1rem;
+}
+
+.upload-types {
+	display: flex !important;
+	justify-content: center;
+	align-items: center;
+	gap: 1rem;
+}
+
+table {
+	border: 1px solid lightgray;
+}
+
+tbody {
+	border-bottom: 1px solid lightgray;
+}
+
+th {
+	border-bottom: 1px solid lightgray;
+	border-right: 1px solid lightgray;
+	padding: 2px 4px;
+}
+
+tfoot {
+	color: gray;
+}
+
+tfoot th {
+	font-weight: normal;
+}
+
+.pagenation-foot {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.cell-overflow {
+	text-overflow: ellipsis;
+}
