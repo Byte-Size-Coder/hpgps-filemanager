@@ -5,13 +5,12 @@ import { collection, doc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes } from 'firebase/storage';
 
 import { FilePond } from 'react-filepond';
-import 'filepond/dist/filepond.min.css';
 
 import { fbStorage, fbFirestore } from '../utils/firebase';
 
-import '../../../styles/App.css';
+import '../../../styles/app.css';
 
-const Uploader = ({ database, onFileUploaded }) => {
+const Uploader = ({ database, onFileUploaded, api }) => {
 	const [files, setFiles] = useState([]);
 	const [geotabData, setGeotabData] = useState({
 		vehicles: [],
@@ -135,7 +134,9 @@ const Uploader = ({ database, onFileUploaded }) => {
 	};
 
 	useEffect(() => {
-		if (global.api) {
+		console.log(api);
+		if (api) {
+			console.log('API TIME!');
 			api.multiCall(
 				[
 					['Get', { typeName: 'Device' }],
@@ -143,14 +144,17 @@ const Uploader = ({ database, onFileUploaded }) => {
 					['Get', { typeName: 'Trailer' }],
 				],
 				function (results) {
+					console.log(results);
 					const formatedData = formatGeotabData(results[0], results[1], results[2]);
 					setGeotabData(formatedData);
 					setCurrentOpetions(formatOptions(formatedData.vehicles));
 				},
-				function (error) {}
+				function (error) {
+					console.log(error);
+				}
 			);
 		}
-	}, []);
+	}, [api]);
 
 	return (
 		<div className="geotabToolbar">
@@ -162,47 +166,56 @@ const Uploader = ({ database, onFileUploaded }) => {
 				name="files" /* sets the file input name, it's filepond by default */
 				labelIdle='Drag & Drop your files or <span class="filepond--label-action">Browse</span>'
 			/>
-			<div className="upload-input">
-				<div className="horizontalButtonSet upload-types">
+			<div
+				style={{
+					display: 'flex',
+					flexDirection: 'column',
+					justifyContent: 'center',
+					alignItems: 'center',
+					gap: '1rem',
+				}}
+				className="upload-input"
+			>
+				<div className="horizontalButtonSet upload-type">
 					<input
 						type="radio"
 						name="uploadType"
 						id="uploadVehicle"
-						className="geotabSwitchButton"
+						className="geo-button"
 						defaultChecked
 						onChange={updateSelect}
 					/>
-					<label className="geotabButton radioButton" htmlFor="uploadVehicle">
+					<label className="radioButton" htmlFor="uploadVehicle">
 						Vehicle
 					</label>
 					<input
 						type="radio"
 						name="uploadType"
 						id="uploadDriver"
-						className="geotabSwitchButton"
+						className="geo-button"
 						onChange={updateSelect}
 					/>
-					<label className="geotabButton radioButton" htmlFor="uploadDriver">
+					<label className="radioButton" htmlFor="uploadDriver">
 						Driver
 					</label>
 					<input
 						type="radio"
 						name="uploadType"
 						id="uploadTrailer"
-						className="geotabSwitchButton radioButton"
+						className="geo-button radioButton"
 						onChange={updateSelect}
 					/>
-					<label className="geotabButton radioButton" htmlFor="uploadTrailer">
+					<label className="radioButton" htmlFor="uploadTrailer">
 						Trailer
 					</label>
 					<input
 						type="radio"
 						name="uploadType"
 						id="uploadAll"
-						className="geotabSwitchButton radioButton"
+						className="geo-button radioButton"
 						onChange={updateSelect}
 					/>
-					<label className="geotabButton radioButton" htmlFor="uploadAll">
+					<label className="radioButton" htmlFor="uploadAll">
 						All
 					</label>
 				</div>
@@ -223,10 +236,10 @@ const Uploader = ({ database, onFileUploaded }) => {
 				<div>
 					{loading ? (
 						<div className="spinner-container">
-							<div className="loading-spinner"></div>
+							<div className="HPGPS_loading-spinner"></div>
 						</div>
 					) : (
-						<button className="geotabButton" onClick={handleUpload}>
+						<button className="geo-button geo-button--action" onClick={handleUpload}>
 							Upload
 						</button>
 					)}

@@ -5,15 +5,14 @@ import DocumentTable from './components/DocumentTabel';
 import FileActions from './components/FileActions';
 
 import 'filepond/dist/filepond.min.css';
-import '../../styles/App.css';
+import '../../styles/app.css';
 
 import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { deleteObject, ref } from 'firebase/storage';
 
 import { fbStorage, fbFirestore } from './utils/firebase';
 
-const App = () => {
-	const [database, setDatabase] = useState('');
+const App = ({ api, database }) => {
 	const [files, setFiles] = useState([]);
 
 	const handleDeleteFile = useCallback(
@@ -41,6 +40,7 @@ const App = () => {
 					fileData={doc}
 					fileId={doc.id}
 					onDeleteFile={(file, id) => handleDeleteFile(file, id, database)}
+					api={api}
 				/>
 			);
 		});
@@ -49,43 +49,40 @@ const App = () => {
 	};
 
 	useEffect(() => {
-		if (global.api) {
-			api.getSession(
-				function (result) {
-					getDocs(collection(fbFirestore, result.database)).then((snapshot) => {
-						const fetchedFiles = [];
-						snapshot.forEach((doc) => {
-							fetchedFiles.push({
-								id: doc.id,
-								...doc.data(),
-								action: (
-									<FileActions
-										fileData={doc.data()}
-										fileId={doc.id}
-										onDeleteFile={(file, id) =>
-											handleDeleteFile(file, id, result.database)
-										}
-									/>
-								),
-							});
-						});
-						setFiles(fetchedFiles);
-						setDatabase(result.database);
-					});
-				},
-				function (e) {
-					console.error('Failed:', e);
-				}
-			);
-		}
+		getDocs(collection(fbFirestore, database)).then((snapshot) => {
+			const fetchedFiles = [];
+			snapshot.forEach((doc) => {
+				fetchedFiles.push({
+					id: doc.id,
+					...doc.data(),
+					action: (
+						<FileActions
+							fileData={doc.data()}
+							fileId={doc.id}
+							onDeleteFile={(file, id) => handleDeleteFile(file, id, database)}
+						/>
+					),
+				});
+			});
+			setFiles(fetchedFiles);
+		});
 	}, []);
 
 	return (
-		<div style={{ display: 'flex', flexDirection: 'column' }}>
+		<div
+			style={{
+				display: 'flex',
+				flexDirection: 'column',
+				marginLeft: '0.75rem',
+				marginRight: '0.75rem',
+			}}
+			id="HPGPS"
+		>
 			<Uploader
 				storage={fbStorage}
 				firestore={fbFirestore}
 				database={database}
+				api={api}
 				onFileUploaded={handleFilesUploaded}
 			/>
 			<DocumentTable files={files} />

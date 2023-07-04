@@ -16,10 +16,10 @@ const FileActions = ({ fileData, fileId, onDeleteFile }) => {
 
 	return (
 		<div style={{ display: 'flex', gap: '0.5rem' }}>
-			<button className="geotabButton" onClick={handleDownload}>
+			<button className="geot-button" onClick={handleDownload}>
 				View
 			</button>
-			<button className="geotabButton" onClick={() => onDeleteFile(fileData, fileId)}>
+			<button className="geo-button" onClick={() => onDeleteFile(fileData, fileId)}>
 				Delete
 			</button>
 		</div>

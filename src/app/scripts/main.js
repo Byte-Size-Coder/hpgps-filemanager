@@ -1,6 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './src/App';
+import '../styles/app.css';
 
 /**
  * @returns {{initialize: Function, focus: Function, blur: Function, startup; Function, shutdown: Function}}
@@ -46,15 +47,15 @@ geotab.addin.hpgpsFilemanager = function () {
 			// getting the current user to display in the UI
 			freshApi.getSession((session) => {
 				elAddin.querySelector('#hpgpsFilemanager-user').textContent = session.userName;
-			});
 
-			elAddin.className = '';
-			// show main content
-			const container = document.getElementById('app');
-			if (container) {
-				const root = createRoot(container);
-				root.render(<App tab="home" />);
-			}
+				elAddin.className = '';
+				// show main content
+				const container = document.getElementById('app');
+				if (container) {
+					const root = createRoot(container);
+					root.render(<App api={freshApi} database={session.database} />);
+				}
+			});
 		},
 
 		/**
