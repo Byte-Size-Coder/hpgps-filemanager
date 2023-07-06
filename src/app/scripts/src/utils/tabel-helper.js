@@ -58,8 +58,6 @@ export const columns = [
 		header: () => 'Vehicles',
 		cell: (info) => {
 			const value = info.renderValue();
-			console.log(value);
-			console.log('INFO: ' + info);
 			if (value === null || value.length < 0) {
 				return;
 			}
@@ -74,7 +72,6 @@ export const columns = [
 		header: () => 'Drivers',
 		cell: (info) => {
 			const value = info.renderValue();
-			console.log(value);
 			if (value === null || value.length < 0) {
 				return;
 			}
@@ -88,7 +85,6 @@ export const columns = [
 		header: () => 'Trailers',
 		cell: (info) => {
 			const value = info.renderValue();
-			console.log(value);
 			if (value === null || value.length < 0) {
 				return;
 			}

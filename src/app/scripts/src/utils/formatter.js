@@ -12,8 +12,6 @@ export const formatGeotabData = (fetchedVehicles, fetchedDrivers, fetchedTrailer
 	const newDrives = fetchedDrivers.map((d) => `Driver | ${d.firstName} ${d.lastName}`);
 	const newTrailers = fetchedTrailers.map((t) => `Trailer | ${t.name}`);
 
-	console.log(fetchedDrivers);
-
 	return {
 		vehicles: [...newVehicles],
 		drivers: [...newDrives],
