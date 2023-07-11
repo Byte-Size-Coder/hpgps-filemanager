@@ -1,88 +1,12 @@
 @import 'filepond/dist/filepond.min.css';
 @import 'react-tooltip/dist/react-tooltip.css';
 
-#HPGPS-Table {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    width: 100%;
-    margin-top: 2rem;
-}
-
-.entire-width {
-    width: 100%;
-}
-
-.radioButton {
-    padding: 0.25rem;
-}
-
 .errorText {
     color: red;
 }
 
 .successText {
     color: green;
-}
-
-@keyframes spinner {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-.HPGPS_loading-spinner {
-    width: 50px;
-    height: 50px;
-    border: 10px solid #f3f3f3; /* Light grey */
-    border-top: 10px solid #2c7ab1; /* Black */
-    border-radius: 50%;
-    animation: spinner 1.5s linear infinite;
-}
-
-.upload-input {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
-}
-
-.upload-types {
-    display: flex !important;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
-}
-
-table {
-    border: 1px solid lightgray;
-}
-
-tbody {
-    border-bottom: 1px solid lightgray;
-}
-
-th {
-    border-bottom: 1px solid lightgray;
-    border-right: 1px solid lightgray;
-    padding: 2px 4px;
-}
-
-tfoot {
-    color: gray;
-}
-
-tfoot th {
-    font-weight: normal;
-}
-
-.gapper {
-    display: flex;
-    gap: 0.5rem;
 }
 
 .pagenation-foot {
@@ -95,31 +19,10 @@ tfoot th {
     text-overflow: ellipsis;
 }
 
-.hpgps-popup {
-    position: fixed;
-    top: 0;
+.sticky {
+    position: sticky !important;
     left: 0;
-    width: 100%;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.4);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.hpgps-popup-inner {
-    position: relative;
-    padding: 1rem;
+    top: 0;
+    z-index: 1;
     background-color: white;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-
-.hpgps-popup-actions {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
 }

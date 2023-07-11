@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Box, Button, Typography, CircularProgress } from '@mui/material';
 
 import Uploader from './components/Uploader';
 import DocumentTable from './components/DocumentTabel';
@@ -101,8 +102,8 @@ const App = ({ api, database }) => {
     }, [files]);
 
     return (
-        <div
-            style={{
+        <Box
+            sx={{
                 display: 'flex',
                 flexDirection: 'column',
                 marginLeft: '0.75rem',
@@ -121,35 +122,35 @@ const App = ({ api, database }) => {
             />
             <DocumentTable files={tableFiles} />
             <Popup open={deleteConfirm !== null}>
-                <div
-                    style={{
+                <Box
+                    sx={{
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
                         alignItems: 'center',
                     }}
                 >
-                    <h2>Are you sure you want to delete the following file?</h2>
-                    <h3> {deleteConfirm ? deleteConfirm.fileName : ''}</h3>
-                </div>
-                <div className="hpgps-popup-actions">
+                    <Typography variant="h6">
+                        Are you sure you want to delete the following file?
+                    </Typography>
+                    <Typography> {deleteConfirm ? deleteConfirm.fileName : ''}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                     {deleteLoad ? (
-                        <div className="spinner-container">
-                            <div className="HPGPS_loading-spinner"></div>
-                        </div>
+                        <CircularProgress />
                     ) : (
                         <>
-                            <button className="geo-button" onClick={onDeleteConfirmed}>
+                            <Button variant="contained" onClick={onDeleteConfirmed}>
                                 Yes
-                            </button>
-                            <button className="geo-button" onClick={() => setDeleteConfirm(null)}>
+                            </Button>
+                            <Button variant="contained" onClick={() => setDeleteConfirm(null)}>
                                 No
-                            </button>
+                            </Button>
                         </>
                     )}
-                </div>
+                </Box>
             </Popup>
-        </div>
+        </Box>
     );
 };
 

@@ -1,8 +1,19 @@
 import React, { useEffect, useState } from 'react';
+import { Box, Typography, CircularProgress } from '@mui/material';
 import { formatGeotabData, formatOptions } from '../utils/formatter';
-import Select from 'react-select';
 import { collection, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getBlob, deleteObject } from 'firebase/storage';
+
+import {
+    Radio,
+    RadioGroup,
+    FormControl,
+    FormControlLabel,
+    FormLabel,
+    Button,
+    Autocomplete,
+    TextField,
+} from '@mui/material';
 
 import { FilePond } from 'react-filepond';
 
@@ -37,7 +48,7 @@ const Uploader = ({ database, onFileUploaded, api, editFile, onEditComplete }) =
     const [uploadTypeSelected, setUploadTypeSelected] = useState('uploadVehicle');
 
     const handleUploadTypeChange = (e) => {
-        const uploadType = e.target.id;
+        const uploadType = e.target.value;
         updateSelect(uploadType);
 
         setUploadTypeSelected(uploadType);
@@ -88,6 +99,7 @@ const Uploader = ({ database, onFileUploaded, api, editFile, onEditComplete }) =
     };
 
     const updateSelection = (selections) => {
+        console.log(selections);
         if (selections.length > 0) {
             let newSelectionsToUpload = [];
             let allVehicles = false;
@@ -335,7 +347,7 @@ const Uploader = ({ database, onFileUploaded, api, editFile, onEditComplete }) =
     }, [editFile]);
 
     return (
-        <div className="geotabToolbar" id="upload-area">
+        <Box className="geotabToolbar" id="upload-area">
             <FilePond
                 files={uploadFiles}
                 onupdatefiles={setUploadFiles}
@@ -344,94 +356,91 @@ const Uploader = ({ database, onFileUploaded, api, editFile, onEditComplete }) =
                 name="files" /* sets the file input name, it's filepond by default */
                 labelIdle='Drag & Drop your files or <span class="filepond--label-action">Browse</span>'
             />
-            <div className="upload-input">
-                <div className="horizontalButtonSet upload-type">
-                    <input
-                        type="radio"
-                        name="uploadType"
-                        id="uploadVehicle"
-                        className="geo-button"
-                        defaultChecked
+
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: '1rem',
+                }}
+            >
+                <FormControl>
+                    <FormLabel id="demo-row-radio-buttons-group-label">Type</FormLabel>
+                    <RadioGroup
+                        row
+                        aria-labelledby="demo-row-radio-buttons-group-label"
+                        name="row-radio-buttons-group"
                         onChange={handleUploadTypeChange}
-                    />
-                    <label className="radioButton" htmlFor="uploadVehicle">
-                        Vehicle
-                    </label>
-                    <input
-                        type="radio"
-                        name="uploadType"
-                        id="uploadDriver"
-                        className="geo-button"
-                        onChange={handleUploadTypeChange}
-                    />
-                    <label className="radioButton" htmlFor="uploadDriver">
-                        Driver
-                    </label>
-                    <input
-                        type="radio"
-                        name="uploadType"
-                        id="uploadTrailer"
-                        className="geo-button radioButton"
-                        onChange={handleUploadTypeChange}
-                    />
-                    <label className="radioButton" htmlFor="uploadTrailer">
-                        Trailer
-                    </label>
-                </div>
-                <div style={{ width: '500px' }}>
-                    <Select
-                        className="basic-single"
-                        classNamePrefix="select"
-                        defaultValue={currentOptions[0] ? currentOptions[0] : ''}
-                        isClearable
-                        isSearchable
-                        name="Owner"
+                        defaultValue={'uploadVehicle'}
+                    >
+                        <FormControlLabel
+                            value="uploadVehicle"
+                            control={<Radio />}
+                            label="Vehicle"
+                        />
+                        <FormControlLabel value="uploadDriver" control={<Radio />} label="Driver" />
+                        <FormControlLabel
+                            value="uploadTrailer"
+                            control={<Radio />}
+                            label="Trailer"
+                        />
+                    </RadioGroup>
+                </FormControl>
+                <Box sx={{ width: { xs: '90%', sm: '80%', md: '500px' } }}>
+                    <Autocomplete
+                        multiple
+                        id="type-select"
                         options={currentOptions}
-                        isMulti
-                        onChange={updateSelection}
                         value={currentSelection}
+                        getOptionLabel={(option) => option.label}
+                        filterSelectedOptions
+                        renderInput={(params) => <TextField {...params} label="Associate With" />}
+                        onChange={(event, newValue) => {
+                            updateSelection(newValue);
+                        }}
                     />
-                </div>
-                <div>
+                </Box>
+                <Box>
                     {loading ? (
-                        <div className="spinner-container">
-                            <div className="HPGPS_loading-spinner"></div>
-                        </div>
+                        <CircularProgress />
                     ) : (
                         <>
                             {editMode ? (
-                                <div className="gapper">
-                                    <button
-                                        className="geo-button geo-button--action"
-                                        onClick={handeEditFile}
-                                    >
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        flexDirection: { xs: 'column', sm: 'row' },
+                                        gap: { xs: '1rem', sm: '0.5rem' },
+                                    }}
+                                >
+                                    <Button variant="contained" onClick={handeEditFile}>
                                         Edit
-                                    </button>
-                                    <button
-                                        className="geo-button geo-button--action"
+                                    </Button>
+                                    <Button
+                                        variant="contained"
+                                        color="error"
                                         onClick={handleCancelEdit}
                                     >
                                         Cancel
-                                    </button>
-                                </div>
+                                    </Button>
+                                </Box>
                             ) : (
-                                <button
-                                    className="geo-button geo-button--action"
-                                    onClick={handleUpload}
-                                >
+                                <Button variant="contained" onClick={handleUpload}>
                                     Upload
-                                </button>
+                                </Button>
                             )}
                         </>
                     )}
-                </div>
+                </Box>
 
-                <div>
-                    {error !== '' && <p className="errorText">{error}</p>}
-                    {success !== '' && <p className="successText">{success}</p>}
-                </div>
-            </div>
-        </div>
+                <Box>
+                    {error !== '' && <Typography className="errorText">{error}</Typography>}
+                    {success !== '' && <Typography className="successText">{success}</Typography>}
+                </Box>
+            </Box>
+        </Box>
     );
 };
 

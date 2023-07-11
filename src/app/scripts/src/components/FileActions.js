@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button, Box } from '@mui/material';
 
 import { ref, getDownloadURL } from 'firebase/storage';
 
@@ -15,17 +16,21 @@ const FileActions = ({ fileData, fileId, onDeleteFile, onEditFile }) => {
     };
 
     return (
-        <div className="gapper">
-            <button className="geo-button" onClick={handleDownload}>
+        <Box sx={{ display: 'flex', gap: '0.75rem' }}>
+            <Button variant="contained" onClick={handleDownload}>
                 View
-            </button>
-            <button className="geo-button" onClick={() => onEditFile({ id: fileId, ...fileData })}>
+            </Button>
+            <Button variant="contained" onClick={() => onEditFile({ id: fileId, ...fileData })}>
                 Edit
-            </button>
-            <button className="geo-button" onClick={() => onDeleteFile(fileData, fileId)}>
+            </Button>
+            <Button
+                variant="contained"
+                color="error"
+                onClick={() => onDeleteFile(fileData, fileId)}
+            >
                 Delete
-            </button>
-        </div>
+            </Button>
+        </Box>
     );
 };
 

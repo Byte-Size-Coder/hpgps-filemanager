@@ -4,6 +4,22 @@ import DebouncedInput from './DebouncedInput';
 import Filter from './Filter';
 
 import {
+    Box,
+    Button,
+    Select,
+    MenuItem,
+    TextField,
+    TableBody,
+    Table,
+    TableContainer,
+    TableRow,
+    TableHead,
+    TableCell,
+    Typography,
+    Paper,
+} from '@mui/material';
+
+import {
     useReactTable,
     getCoreRowModel,
     getFilteredRowModel,
@@ -49,145 +65,151 @@ const DocumentTable = ({ files }) => {
     });
 
     return (
-        <div id="HPGPS-Table">
-            <div>
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem',
+                width: '100%',
+                marginTop: '2rem',
+            }}
+        >
+            <Box>
                 <DebouncedInput
                     value={globalFilter ?? ''}
                     onChange={(value) => setGlobalFilter(String(value))}
-                    className="geotabFormEditField"
                     placeholder="Search all columns..."
                 />
-            </div>
-            <div className="entire-width">
-                <table className="entire-width">
-                    <thead>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <tr key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => {
-                                    return (
-                                        <th key={header.id} colSpan={header.colSpan}>
-                                            {header.isPlaceholder ? null : (
-                                                <>
-                                                    <div
-                                                        {...{
-                                                            className: header.column.getCanSort()
-                                                                ? 'cursor-pointer select-none'
-                                                                : '',
-                                                            onClick:
-                                                                header.column.getToggleSortingHandler(),
-                                                        }}
-                                                    >
-                                                        {flexRender(
-                                                            header.column.columnDef.header,
-                                                            header.getContext()
-                                                        )}
-                                                        {{
-                                                            asc: ' 🔼',
-                                                            desc: ' 🔽',
-                                                        }[header.column.getIsSorted()] ?? null}
-                                                    </div>
-                                                    {header.id !== 'action' ? (
-                                                        <div>
-                                                            <Filter
-                                                                column={header.column}
-                                                                table={table}
-                                                            />
-                                                        </div>
-                                                    ) : null}
-                                                </>
-                                            )}
-                                        </th>
-                                    );
-                                })}
-                            </tr>
-                        ))}
-                    </thead>
-                    <tbody>
-                        {table.getRowModel().rows.map((row, index) => {
-                            return (
-                                <tr
-                                    key={row.id}
-                                    className={
-                                        index % 2 === 0
-                                            ? 'geotabPrimaryFill cell-overflow'
-                                            : 'geotabSecondaryFill cell-overflow'
-                                    }
-                                >
-                                    {row.getVisibleCells().map((cell) => {
+            </Box>
+            <Box sx={{ width: '100%' }}>
+                <TableContainer component={Paper} sx={{ width: '100%' }}>
+                    <Table>
+                        <TableHead>
+                            {table.getHeaderGroups().map((headerGroup) => (
+                                <TableRow key={headerGroup.id}>
+                                    {headerGroup.headers.map((header) => {
                                         return (
-                                            <td
-                                                key={cell.id}
-                                                style={{
-                                                    borderRight: '1px solid lightgray',
-                                                    paddingLeft: '0.25rem',
-                                                }}
-                                                className="geotabPrimaryText"
+                                            <TableCell
+                                                key={header.id}
+                                                colSpan={header.colSpan}
+                                                className={`${
+                                                    header.id === 'fileName' ? 'sticky' : ''
+                                                }`}
                                             >
-                                                {flexRender(
-                                                    cell.column.columnDef.cell,
-                                                    cell.getContext()
+                                                {header.isPlaceholder ? null : (
+                                                    <>
+                                                        <Typography variant="h6">
+                                                            {flexRender(
+                                                                header.column.columnDef.header,
+                                                                header.getContext()
+                                                            )}
+                                                        </Typography>
+                                                        {header.id !== 'action' ? (
+                                                            <div>
+                                                                <Filter
+                                                                    column={header.column}
+                                                                    table={table}
+                                                                    name={header.column.columnDef.header()}
+                                                                />
+                                                            </div>
+                                                        ) : null}
+                                                    </>
                                                 )}
-                                            </td>
+                                            </TableCell>
                                         );
                                     })}
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
+                                </TableRow>
+                            ))}
+                        </TableHead>
+                        <TableBody>
+                            {table.getRowModel().rows.map((row, index) => {
+                                return (
+                                    <TableRow
+                                        key={row.id}
+                                        className={
+                                            index % 2 === 0
+                                                ? 'geotabPrimaryFill cell-overflow'
+                                                : 'geotabSecondaryFill cell-overflow'
+                                        }
+                                    >
+                                        {row.getVisibleCells().map((cell) => {
+                                            return (
+                                                <TableCell
+                                                    key={cell.id}
+                                                    className={`${
+                                                        cell.id.includes('fileName') ? 'sticky' : ''
+                                                    }`}
+                                                >
+                                                    <div>
+                                                        {flexRender(
+                                                            cell.column.columnDef.cell,
+                                                            cell.getContext()
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                            );
+                                        })}
+                                    </TableRow>
+                                );
+                            })}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
                 {files.length > table.getState().pagination.pageSize && (
                     <div
                         style={{ marginTop: '1.25rem' }}
                         className="geotabSecondaryText pagenation-foot"
                     >
-                        <button
+                        <Button
                             className="geotabButton"
                             onClick={() => table.setPageIndex(0)}
                             disabled={!table.getCanPreviousPage()}
                         >
                             {'<<'}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             className="geotabButton"
                             onClick={() => table.previousPage()}
                             disabled={!table.getCanPreviousPage()}
                         >
                             {'<'}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             className="geotabButton"
                             onClick={() => table.nextPage()}
                             disabled={!table.getCanNextPage()}
                         >
                             {'>'}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             className="geotabButton"
                             onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                             disabled={!table.getCanNextPage()}
                         >
                             {'>>'}
-                        </button>
+                        </Button>
                         <span className="pagenation-foot">
-                            <div>Page</div>
-                            <strong>
+                            <Typography>Page</Typography>
+                            <Typography sx={{ fontWeight: 'bold' }}>
                                 {table.getState().pagination.pageIndex + 1} of{' '}
                                 {table.getPageCount()}
-                            </strong>
+                            </Typography>
                         </span>
                         <span className="pagenation-foot">
-                            | Go to page:
-                            <input
+                            <Typography>| Go to page:</Typography>
+                            <TextField
+                                sx={{ width: '75px' }}
                                 type="number"
+                                size="small"
                                 defaultValue={table.getState().pagination.pageIndex + 1}
                                 onChange={(e) => {
                                     const page = e.target.value ? Number(e.target.value) - 1 : 0;
                                     table.setPageIndex(page);
                                 }}
-                                className="geotabFormEditField"
                             />
                         </span>
-                        <select
+                        <Select
+                            size="small"
                             value={table.getState().pagination.pageSize}
                             onChange={(e) => {
                                 table.setPageSize(Number(e.target.value));
@@ -195,16 +217,16 @@ const DocumentTable = ({ files }) => {
                             className="geotabFormEditField"
                         >
                             {[10, 20, 30, 40, 50].map((pageSize) => (
-                                <option key={pageSize} value={pageSize}>
+                                <MenuItem key={pageSize} value={pageSize}>
                                     Show {pageSize}
-                                </option>
+                                </MenuItem>
                             ))}
-                        </select>
+                        </Select>
                         <div>{table.getPrePaginationRowModel().rows.length} Rows</div>
                     </div>
                 )}
-            </div>
-        </div>
+            </Box>
+        </Box>
     );
 };
 
