@@ -124,14 +124,7 @@ const DocumentTable = ({ files }) => {
                         <TableBody>
                             {table.getRowModel().rows.map((row, index) => {
                                 return (
-                                    <TableRow
-                                        key={row.id}
-                                        className={
-                                            index % 2 === 0
-                                                ? 'geotabPrimaryFill cell-overflow'
-                                                : 'geotabSecondaryFill cell-overflow'
-                                        }
-                                    >
+                                    <TableRow key={row.id}>
                                         {row.getVisibleCells().map((cell) => {
                                             return (
                                                 <TableCell
@@ -161,28 +154,21 @@ const DocumentTable = ({ files }) => {
                         className="geotabSecondaryText pagenation-foot"
                     >
                         <Button
-                            className="geotabButton"
                             onClick={() => table.setPageIndex(0)}
                             disabled={!table.getCanPreviousPage()}
                         >
                             {'<<'}
                         </Button>
                         <Button
-                            className="geotabButton"
                             onClick={() => table.previousPage()}
                             disabled={!table.getCanPreviousPage()}
                         >
                             {'<'}
                         </Button>
-                        <Button
-                            className="geotabButton"
-                            onClick={() => table.nextPage()}
-                            disabled={!table.getCanNextPage()}
-                        >
+                        <Button onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
                             {'>'}
                         </Button>
                         <Button
-                            className="geotabButton"
                             onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                             disabled={!table.getCanNextPage()}
                         >
