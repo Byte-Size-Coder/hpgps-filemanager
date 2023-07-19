@@ -1,28 +1,27 @@
 @import 'filepond/dist/filepond.min.css';
-@import 'react-tooltip/dist/react-tooltip.css';
 
 .errorText {
-    color: red;
+	color: red;
 }
 
 .successText {
-    color: green;
+	color: green;
 }
 
 .pagenation-foot {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
 }
 
 .cell-overflow {
-    text-overflow: ellipsis;
+	text-overflow: ellipsis;
 }
 
 .sticky {
-    position: sticky !important;
-    left: 0;
-    top: 0;
-    z-index: 1;
-    background-color: white;
+	position: sticky !important;
+	left: 0;
+	top: 0;
+	z-index: 1;
+	background-color: white;
 }

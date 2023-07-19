@@ -1,395 +1,382 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, CircularProgress } from '@mui/material';
+import {
+	Box,
+	Typography,
+	CircularProgress,
+	FormControl,
+	FormLabel,
+	FormControlLabel,
+	RadioGroup,
+	Radio,
+} from '@mui/material';
 import { formatGeotabData, formatOptions } from '../utils/formatter';
 import { collection, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getBlob, deleteObject } from 'firebase/storage';
 
-import {
-    Radio,
-    RadioGroup,
-    FormControl,
-    FormControlLabel,
-    FormLabel,
-    Button,
-    Autocomplete,
-    TextField,
-} from '@mui/material';
+import { Button } from '@mui/material';
 
 import { FilePond } from 'react-filepond';
 
 import { fbStorage, fbFirestore } from '../utils/firebase';
 
 import '../../../styles/app.css';
-
-const containsAll = (value) => {
-    value === 'All Vehicles' || value === 'All Drivers' || value === 'All Trailers';
-};
-
-const filterAll = (value) => {
-    value !== 'All Vehicles' && value !== 'All Drivers' && value !== 'All Trailers';
-};
+import AssociateSelect from './AssociateSelect';
 
 const Uploader = ({ database, onFileUploaded, api, editFile, onEditComplete }) => {
-    const [uploadFiles, setUploadFiles] = useState([]);
-    const [geotabData, setGeotabData] = useState({
-        vehicles: [],
-        drivers: [],
-        trailers: [],
-    });
-    const [currentOptions, setCurrentOpetions] = useState([]);
-    const [currentSelection, setCurrentSelection] = useState([]);
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [editMode, setEditMode] = useState(false);
-    const [oldEditFile, setOldEditfile] = useState(null);
-    const [allOptionsSaved, setAllOptionsSaved] = useState([]);
-    const [selectionsToUpload, setSelectionsToUpload] = useState([]);
-    const [uploadTypeSelected, setUploadTypeSelected] = useState('uploadVehicle');
+	const [uploadFiles, setUploadFiles] = useState([]);
+	const [geotabData, setGeotabData] = useState({
+		vehicles: [],
+		drivers: [],
+		trailers: [],
+		groups: [],
+	});
+	const [uploadData, setUploadData] = useState({
+		vehicles: [],
+		drivers: [],
+		trailers: [],
+		groups: [],
+	});
 
-    const handleUploadTypeChange = (e) => {
-        const uploadType = e.target.value;
-        updateSelect(uploadType);
+	const [selections, setSelections] = useState({
+		vehicles: [],
+		drivers: [],
+		trailers: [],
+		groups: [],
+	});
 
-        setUploadTypeSelected(uploadType);
-    };
+	const [error, setError] = useState('');
+	const [success, setSuccess] = useState('');
+	const [loading, setLoading] = useState(false);
+	const [editMode, setEditMode] = useState(false);
+	const [oldEditFile, setOldEditfile] = useState(null);
+	const [uploadType, setUploadType] = useState('uploadGroup');
 
-    const updateSelect = (uploadType, reset = false) => {
-        let newOptions = [];
+	const handleUpdateUploadType = (e) => {
+		setUploadType(e.target.value);
+		setSelections({
+			vehicles: [],
+			drivers: [],
+			trailers: [],
+			groups: [],
+		});
+	};
 
-        let allVehicles = false;
-        let allDrivers = false;
-        let allTrailers = false;
+	const handleUpdateUploadData = (type, data) => {
+		setUploadData({ ...uploadData, [`${type}`]: [...data] });
+	};
 
-        if (!reset) {
-            currentSelection.forEach((selection) => {
-                switch (selection.value) {
-                    case 'All Vehicles':
-                        allVehicles = true;
-                        break;
-                    case 'All Drivers':
-                        allDrivers = true;
-                        break;
-                    case 'All Trailers':
-                        allTrailers = true;
-                        break;
-                }
-            });
-        }
+	const handleUpdateCurrentSelections = (selected, key) => {
+		const newSelections = { ...selections, [`${key}`]: [...selected] };
+		setSelections(newSelections);
+	};
 
-        switch (uploadType) {
-            case 'uploadVehicle':
-                newOptions = allVehicles ? [] : ['All Vehicles', ...geotabData.vehicles];
-                break;
-            case 'uploadDriver':
-                newOptions = allDrivers ? [] : ['All Drivers', ...geotabData.drivers];
-                break;
-            case 'uploadTrailer':
-                newOptions = allTrailers ? [] : ['All Trailers', ...geotabData.trailers];
-                break;
-        }
+	const organizeOwnersAndTags = () => {
+		const owners = {
+			vehicles: [],
+			drivers: [],
+			trailers: [],
+			groups: [],
+		};
 
-        setCurrentOpetions(formatOptions(newOptions));
-    };
+		const tags = [];
 
-    const filterSelections = (allFilter, item, term) => {
-        const type = item.split('|')[0].trim();
+		uploadData.vehicles.forEach((vehicle) => {
+			owners.vehicles.push(vehicle.value);
+			tags.push(vehicle.value);
+		});
 
-        return !(allFilter && type === term);
-    };
+		uploadData.drivers.forEach((driver) => {
+			owners.drivers.push(driver.value);
+			tags.push(driver.value);
+		});
 
-    const updateSelection = (selections) => {
-        console.log(selections);
-        if (selections.length > 0) {
-            let newSelectionsToUpload = [];
-            let allVehicles = false;
-            let allDrivers = false;
-            let allTrailers = false;
-            selections.forEach((selection) => {
-                switch (selection.value) {
-                    case 'All Vehicles':
-                        allVehicles = true;
-                        newSelectionsToUpload.push(...formatOptions([...geotabData.vehicles]));
-                        break;
-                    case 'All Drivers':
-                        allDrivers = true;
-                        newSelectionsToUpload.push(...formatOptions([...geotabData.drivers]));
-                        break;
-                    case 'All Trailers':
-                        allTrailers = true;
-                        newSelectionsToUpload.push(...formatOptions([...geotabData.trailer]));
-                        break;
-                    default:
-                        newSelectionsToUpload.push(selection);
-                        break;
-                }
-            });
-            setSelectionsToUpload(newSelectionsToUpload);
+		uploadData.trailers.forEach((trailer) => {
+			owners.trailers.push(trailer.value);
+			tags.push(trailer.value);
+		});
 
-            const filteredSelections = selections.filter((select) => {
-                return (
-                    filterSelections(allVehicles, select.value, 'Vehicle') &&
-                    filterSelections(allDrivers, select.value, 'Driver') &&
-                    filterSelections(allTrailers, select.value, 'Trailer')
-                );
-            });
+		uploadData.groups.forEach((group) => {
+			owners.groups.push(group.label);
+			tags.push(group.label);
+		});
 
-            setCurrentSelection(filteredSelections);
+		return { owners, tags };
+	};
 
-            if (
-                (allVehicles && uploadTypeSelected === 'uploadVehicle') ||
-                (allDrivers && uploadTypeSelected === 'uploadDriver') ||
-                (allTrailers && uploadTypeSelected === 'uploadTrailer')
-            ) {
-                setCurrentOpetions([]);
-            }
-        } else {
-            setSelectionsToUpload([]);
-            setCurrentSelection([]);
-            updateSelect(uploadTypeSelected, true);
-        }
-    };
+	const clearUploadForm = () => {
+		setUploadFiles([]);
+		const emptyData = {
+			vehicles: [],
+			drivers: [],
+			trailers: [],
+			groups: [],
+		};
 
-    const organizeOwnersAndTags = () => {
-        const owners = {
-            vehicles: [],
-            drivers: [],
-            trailers: [],
-        };
+		setUploadData({ ...emptyData });
+		setSelections({ ...emptyData });
+	};
 
-        const tags = [];
+	const handleCancelEdit = () => {
+		clearUploadForm();
+		setEditMode(false);
+	};
 
-        for (let i = 0; i < selectionsToUpload.length; ++i) {
-            const selection = selectionsToUpload[i].value;
-            const selectionBreak = selection.split('|');
+	const handeEditFile = async () => {
+		setError('');
+		if (uploadFiles.length <= 0) {
+			setError(
+				'Must have a file selected for upload. Please drop a file or select one above.'
+			);
+			return;
+		}
 
-            switch (selectionBreak[0].trim()) {
-                case 'Vehicle':
-                    owners.vehicles.push(selectionBreak[1].trim());
-                    break;
-                case 'Driver':
-                    owners.drivers.push(selectionBreak[1].trim());
-                    break;
-                case 'Trailer':
-                    owners.trailers.push(selectionBreak[1].trim());
-                    break;
-            }
+		if (!isThereUploadData() === '') {
+			setError(
+				'Must select either a Vehicle, Driver, Trailer, or a Group to associate file to.'
+			);
+			return;
+		}
 
-            tags.push(selectionBreak[1].trim());
-        }
+		setLoading(true);
 
-        return { owners, tags };
-    };
+		try {
+			let editedDoc = {};
 
-    const clearUploadForm = () => {
-        setUploadFiles([]);
-        updateSelection([]);
-    };
+			// skip any file edit logic as it has not changed
+			if (uploadFiles.length === 1 && uploadFiles[0] === oldEditFile) {
+				editedDoc = organizeOwnersAndTags();
+			} else {
+				const storageRef = ref(fbStorage, editFile.path);
 
-    const handleCancelEdit = () => {
-        clearUploadForm();
-        setEditMode(false);
-    };
+				await deleteObject(storageRef);
+				const newStorageRef = ref(
+					fbStorage,
+					`${database}/${editFile.id}/${uploadFiles[0].filename}`
+				);
+				await uploadBytes(newStorageRef, uploadFiles[0].file);
+				editedDoc = {
+					fileName: uploadFiles[0].filename,
+					path: `${database}/${editFile.id}/${uploadFiles[0].filename}`,
+					...organizeOwnersAndTags(),
+				};
+			}
 
-    const handeEditFile = async () => {
-        setError('');
-        if (uploadFiles.length <= 0) {
-            setError(
-                'Must have a file selected for upload. Please drop a file or select one above.'
-            );
-            return;
-        }
+			await updateDoc(doc(fbFirestore, `${database}/${editFile.id}`), editedDoc);
 
-        if (currentSelection === '') {
-            setError('Must select either a Vehicle, Driver, or Trailer to associate file to.');
-            return;
-        }
+			clearUploadForm();
+			onEditComplete(editFile.id, editedDoc);
+			setLoading(false);
+			setEditMode(false);
 
-        setLoading(true);
+			setSuccess('File successfully updated!');
 
-        try {
-            let editedDoc = {};
+			setTimeout(() => {
+				setSuccess('');
+			}, 3000);
+		} catch (error) {
+			console.error(error);
+			setLoading(false);
+		}
+	};
 
-            // skip any file edit logic as it has not changed
-            if (uploadFiles.length === 1 && uploadFiles[0] === oldEditFile) {
-                editedDoc = organizeOwnersAndTags();
-            } else {
-                const storageRef = ref(fbStorage, editFile.path);
+	const isThereUploadData = () => {
+		return (
+			uploadData.vehicles.length > 0 ||
+			uploadData.drivers.length > 0 ||
+			uploadData.trailers.length > 0 ||
+			uploadData.groups.length > 0
+		);
+	};
 
-                await deleteObject(storageRef);
-                const newStorageRef = ref(
-                    fbStorage,
-                    `${database}/${editFile.id}/${uploadFiles[0].filename}`
-                );
-                await uploadBytes(newStorageRef, uploadFiles[0].file);
-                editedDoc = {
-                    fileName: uploadFiles[0].filename,
-                    path: `${database}/${editFile.id}/${uploadFiles[0].filename}`,
-                    ...organizeOwnersAndTags(),
-                };
-            }
+	const handleUpload = async () => {
+		setError('');
 
-            await updateDoc(doc(fbFirestore, `${database}/${editFile.id}`), editedDoc);
+		if (uploadFiles.length <= 0) {
+			setError(
+				'Must have a file selected for upload. Please drop a file or select one above.'
+			);
+			return;
+		}
 
-            clearUploadForm();
-            onEditComplete(editFile.id, editedDoc);
-            setLoading(false);
-            setEditMode(false);
+		if (!isThereUploadData()) {
+			setError(
+				'Must select either a Vehicle, Driver, Trailer, or a Group to associate file to.'
+			);
+			return;
+		}
 
-            setSuccess('File successfully updated!');
+		setLoading(true);
 
-            setTimeout(() => {
-                setSuccess('');
-            }, 3000);
-        } catch (error) {
-            console.error(error);
-            setLoading(false);
-        }
-    };
+		Promise.all(uploadFiles.map((file) => uploadFile(file.filename, file.file)))
+			.then((docs) => {
+				setSuccess('All Files Successfully uploaded');
+				clearUploadForm();
 
-    const handleUpload = async () => {
-        setError('');
+				onFileUploaded(docs);
 
-        if (uploadFiles.length <= 0) {
-            setError(
-                'Must have a file selected for upload. Please drop a file or select one above.'
-            );
-            return;
-        }
+				setTimeout(() => {
+					setSuccess('');
+				}, 3000);
+			})
+			.catch((error) => {
+				console.log('Some failed: ', error);
+			})
+			.finally(() => {
+				setLoading(false);
+			});
+	};
 
-        if (currentSelection === '') {
-            setError('Must select either a Vehicle, Driver, or Trailer to associate file to.');
-            return;
-        }
+	const uploadFile = async (filename, file) => {
+		const docRef = doc(collection(fbFirestore, database));
+		const storageRef = ref(fbStorage, `${database}/${docRef.id}/${filename}`);
 
-        setLoading(true);
+		return uploadBytes(storageRef, file).then(async () => {
+			const editDoc = {
+				fileName: filename,
+				path: `${database}/${docRef.id}/${filename}`,
+				...organizeOwnersAndTags(),
+			};
 
-        Promise.all(uploadFiles.map((file) => uploadFile(file.filename, file.file)))
-            .then((docs) => {
-                setSuccess('All Files Successfully uploaded');
-                clearUploadForm();
+			await setDoc(docRef, editDoc);
 
-                onFileUploaded(docs);
+			return { id: docRef.id, ...editDoc };
+		});
+	};
 
-                setTimeout(() => {
-                    setSuccess('');
-                }, 3000);
-            })
-            .catch((error) => {
-                console.log('Some failed: ', error);
-            })
-            .finally(() => {
-                setLoading(false);
-            });
-    };
+	useEffect(() => {
+		if (api) {
+			api.multiCall(
+				[
+					['Get', { typeName: 'Device' }],
+					['Get', { typeName: 'User', search: { isDriver: true } }],
+					['Get', { typeName: 'Trailer' }],
+					['Get', { typeName: 'Group' }],
+				],
+				function (results) {
+					const formatedData = formatGeotabData(
+						results[0],
+						results[1],
+						results[2],
+						results[3]
+					);
+					console.log(results[3]);
+					setGeotabData(formatedData);
+				},
+				function (error) {
+					console.log(error);
+				}
+			);
+		}
+	}, [api]);
 
-    const uploadFile = async (filename, file) => {
-        const docRef = doc(collection(fbFirestore, database));
-        const storageRef = ref(fbStorage, `${database}/${docRef.id}/${filename}`);
+	useEffect(() => {
+		if (editFile !== null) {
+			console.log(editFile);
+			const storageRef = ref(fbStorage, editFile.path);
+			getBlob(storageRef).then((blob) => {
+				const fileToEdit = new File([blob], editFile.fileName);
 
-        return uploadBytes(storageRef, file).then(async () => {
-            const editDoc = {
-                fileName: filename,
-                path: `${database}/${docRef.id}/${filename}`,
-                ...organizeOwnersAndTags(),
-            };
+				const dataVehicles = editFile.owners.vehicles.map((veh) => `${veh}`);
+				const dataDrivers = editFile.owners.drivers.map((dri) => `${dri}`);
+				const dataTrailers = editFile.owners.trailers.map((tra) => `${tra}`);
+				const dataGroups = editFile.owners.groups.map((gro) => `${gro}`);
 
-            await setDoc(docRef, editDoc);
+				setSelections({
+					vehicles: [...formatOptions(dataVehicles)],
+					drivers: [...formatOptions(dataDrivers)],
+					trailers: [...formatOptions(dataTrailers)],
+					groups: [...formatOptions(dataGroups)],
+				});
 
-            return { id: docRef.id, ...editDoc };
-        });
-    };
+				setUploadFiles([fileToEdit]);
 
-    useEffect(() => {
-        if (api) {
-            api.multiCall(
-                [
-                    ['Get', { typeName: 'Device' }],
-                    ['Get', { typeName: 'User' }],
-                    ['Get', { typeName: 'Trailer' }],
-                ],
-                function (results) {
-                    const formatedData = formatGeotabData(results[0], results[1], results[2]);
-                    setGeotabData(formatedData);
-                    setCurrentOpetions(formatOptions(['All Vehicles', ...formatedData.vehicles]));
-                },
-                function (error) {
-                    console.log(error);
-                }
-            );
-        }
-    }, [api]);
+				setEditMode(true);
+				setOldEditfile(fileToEdit);
+				const uploadEl = document.getElementById('upload-area');
 
-    useEffect(() => {
-        if (editFile !== null) {
-            const storageRef = ref(fbStorage, editFile.path);
-            getBlob(storageRef).then((blob) => {
-                const fileToEdit = new File([blob], editFile.fileName);
+				if (uploadEl) {
+					uploadEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+				}
+			});
+		}
+	}, [editFile]);
 
-                const dataVehicles = editFile.owners.vehicles.map((veh) => `Vehicle | ${veh}`);
-                const dataDrivers = editFile.owners.drivers.map((dri) => `Driver | ${dri}`);
-                const dataTrailers = editFile.owners.trailers.map((tra) => `Trailer | ${tra}`);
+	return (
+		<Box className="geotabToolbar" id="upload-area">
+			<FilePond
+				files={uploadFiles}
+				onupdatefiles={setUploadFiles}
+				allowMultiple={editMode ? false : true}
+				maxFiles={3}
+				name="files" /* sets the file input name, it's filepond by default */
+				labelIdle='Drag & Drop your files or <span class="filepond--label-action">Browse</span>'
+			/>
 
-                setUploadFiles([fileToEdit]);
+			<Box
+				sx={{
+					display: 'flex',
+					flexDirection: 'column',
+					justifyContent: 'center',
+					alignItems: 'center',
+					gap: '1rem',
+				}}
+			>
+				<Box
+					sx={{
+						width: { xs: '100%', sm: '100%', md: '75%' },
+						display: 'flex',
+						flexDirection: { xs: 'column', sm: 'column', md: 'row' },
+						justifyContent: 'center',
+						alignItems: 'center',
+						gap: { xs: '1rem', sm: '1rem', md: '2rem' },
+					}}
+				>
+					<RadioGroup
+						name="row-radio-buttons-group"
+						onChange={handleUpdateUploadType}
+						defaultValue={'uploadGroup'}
+					>
+						<Box sx={{ display: 'flex', gap: '2.5rem' }}>
+							<FormControlLabel
+								value="uploadGroup"
+								control={<Radio />}
+								label="Upload By Group"
+							/>
+						</Box>
+						<Box>
+							<FormControlLabel
+								value="uploadSelection"
+								control={<Radio />}
+								label="Upload By Selection"
+							/>
+						</Box>
+					</RadioGroup>
+					<AssociateSelect
+						options={geotabData.groups}
+						label="Group"
+						currentSelections={selections.groups}
+						onUpdateCurrentSelections={(selections) => {
+							handleUpdateCurrentSelections(selections, 'groups');
+						}}
+						onUpdateUploadSelections={(data) => handleUpdateUploadData('groups', data)}
+						isDisabled={uploadType !== 'uploadGroup'}
+						isGroup
+						selectWidth="50%"
+					/>
+				</Box>
 
-                setCurrentSelection(
-                    formatOptions([...dataVehicles, ...dataDrivers, ...dataTrailers])
-                );
-                setEditMode(true);
-                setOldEditfile(fileToEdit);
-                const uploadEl = document.getElementById('upload-area');
-
-                if (uploadEl) {
-                    uploadEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            });
-        }
-    }, [editFile]);
-
-    return (
-        <Box className="geotabToolbar" id="upload-area">
-            <FilePond
-                files={uploadFiles}
-                onupdatefiles={setUploadFiles}
-                allowMultiple={editMode ? false : true}
-                maxFiles={3}
-                name="files" /* sets the file input name, it's filepond by default */
-                labelIdle='Drag & Drop your files or <span class="filepond--label-action">Browse</span>'
-            />
-
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    gap: '1rem',
-                }}
-            >
-                <FormControl>
-                    <FormLabel id="demo-row-radio-buttons-group-label">Type</FormLabel>
-                    <RadioGroup
-                        row
-                        aria-labelledby="demo-row-radio-buttons-group-label"
-                        name="row-radio-buttons-group"
-                        onChange={handleUploadTypeChange}
-                        defaultValue={'uploadVehicle'}
-                    >
-                        <FormControlLabel
-                            value="uploadVehicle"
-                            control={<Radio />}
-                            label="Vehicle"
-                        />
-                        <FormControlLabel value="uploadDriver" control={<Radio />} label="Driver" />
-                        <FormControlLabel
-                            value="uploadTrailer"
-                            control={<Radio />}
-                            label="Trailer"
-                        />
-                    </RadioGroup>
-                </FormControl>
-                <Box sx={{ width: { xs: '90%', sm: '80%', md: '500px' } }}>
-                    <Autocomplete
+				<Box
+					sx={{
+						paddingLeft: '1.5rem',
+						paddingRight: '1.5rem',
+						width: '100%',
+						display: 'flex',
+						flexDirection: { xs: 'column', sm: 'column', md: 'row' },
+						justifyContent: 'center',
+						gap: '2rem',
+					}}
+				>
+					{/* <Autocomplete
                         multiple
                         id="type-select"
                         options={currentOptions}
@@ -400,48 +387,82 @@ const Uploader = ({ database, onFileUploaded, api, editFile, onEditComplete }) =
                         onChange={(event, newValue) => {
                             updateSelection(newValue);
                         }}
-                    />
-                </Box>
-                <Box>
-                    {loading ? (
-                        <CircularProgress />
-                    ) : (
-                        <>
-                            {editMode ? (
-                                <Box
-                                    sx={{
-                                        display: 'flex',
-                                        flexDirection: { xs: 'column', sm: 'row' },
-                                        gap: { xs: '1rem', sm: '0.5rem' },
-                                    }}
-                                >
-                                    <Button variant="contained" onClick={handeEditFile}>
-                                        Edit
-                                    </Button>
-                                    <Button
-                                        variant="contained"
-                                        color="error"
-                                        onClick={handleCancelEdit}
-                                    >
-                                        Cancel
-                                    </Button>
-                                </Box>
-                            ) : (
-                                <Button variant="contained" onClick={handleUpload}>
-                                    Upload
-                                </Button>
-                            )}
-                        </>
-                    )}
-                </Box>
+                    /> */}
+					<AssociateSelect
+						options={geotabData.vehicles}
+						label="Vehicle"
+						currentSelections={selections.vehicles}
+						onUpdateCurrentSelections={(selections) => {
+							handleUpdateCurrentSelections(selections, 'vehicles');
+						}}
+						onUpdateUploadSelections={(data) =>
+							handleUpdateUploadData('vehicles', data)
+						}
+						isDisabled={uploadType !== 'uploadSelection'}
+					/>
+					<AssociateSelect
+						options={geotabData.drivers}
+						label="Driver"
+						currentSelections={selections.drivers}
+						onUpdateCurrentSelections={(selections) => {
+							handleUpdateCurrentSelections(selections, 'drivers');
+						}}
+						onUpdateUploadSelections={(data) => handleUpdateUploadData('drivers', data)}
+						isDisabled={uploadType !== 'uploadSelection'}
+					/>
+					<AssociateSelect
+						options={geotabData.trailers}
+						label="Trailer"
+						currentSelections={selections.trailers}
+						onUpdateCurrentSelections={(selections) => {
+							handleUpdateCurrentSelections(selections, 'trailers');
+						}}
+						onUpdateUploadSelections={(data) =>
+							handleUpdateUploadData('trailers', data)
+						}
+						isDisabled={uploadType !== 'uploadSelection'}
+					/>
+				</Box>
+				<Box>
+					{loading ? (
+						<CircularProgress />
+					) : (
+						<>
+							{editMode ? (
+								<Box
+									sx={{
+										display: 'flex',
+										flexDirection: { xs: 'column', sm: 'row' },
+										gap: { xs: '1rem', sm: '0.5rem' },
+									}}
+								>
+									<Button variant="contained" onClick={handeEditFile}>
+										Save
+									</Button>
+									<Button
+										variant="contained"
+										color="error"
+										onClick={handleCancelEdit}
+									>
+										Cancel
+									</Button>
+								</Box>
+							) : (
+								<Button variant="contained" onClick={handleUpload}>
+									Upload
+								</Button>
+							)}
+						</>
+					)}
+				</Box>
 
-                <Box>
-                    {error !== '' && <Typography className="errorText">{error}</Typography>}
-                    {success !== '' && <Typography className="successText">{success}</Typography>}
-                </Box>
-            </Box>
-        </Box>
-    );
+				<Box>
+					{error !== '' && <Typography className="errorText">{error}</Typography>}
+					{success !== '' && <Typography className="successText">{success}</Typography>}
+				</Box>
+			</Box>
+		</Box>
+	);
 };
 
 export default Uploader;

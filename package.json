@@ -92,6 +92,7 @@
 		"@emotion/react": "^11.11.1",
 		"@emotion/styled": "^11.11.0",
 		"@fontsource/roboto": "^5.0.5",
+		"@mui/icons-material": "^5.14.0",
 		"@mui/material": "^5.13.7",
 		"@tanstack/match-sorter-utils": "^8.8.4",
 		"@tanstack/react-table": "^8.9.3",
@@ -99,7 +100,6 @@
 		"firebase": "^9.23.0",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
-		"react-filepond": "^7.1.2",
-		"react-tooltip": "^5.16.1"
+		"react-filepond": "^7.1.2"
 	}
 }
