@@ -1,4 +1,5 @@
 @import 'filepond/dist/filepond.min.css';
+@import 'react-dropdown-tree-select/dist/styles.css';
 
 .errorText {
 	color: red;
@@ -24,4 +25,8 @@
 	top: 0;
 	z-index: 1;
 	background-color: white;
+}
+
+.dropdown-content {
+	z-index: 50 !important;
 }

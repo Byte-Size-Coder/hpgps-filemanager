@@ -21,6 +21,21 @@ const displayCell = (value) => {
 	);
 };
 
+const displayGroupCell = (value) => {
+	const content = `${value.slice(0, 5).join(', ')}${value.length > 5 ? '...' : ''}`;
+	return (
+		<>
+			{value.length > 5 ? (
+				<Tooltip title={`${value.join(', ')}`}>
+					<Typography>{content}</Typography>
+				</Tooltip>
+			) : (
+				<Typography>{content}</Typography>
+			)}
+		</>
+	);
+};
+
 const fuzzySort = (rowA, rowB, columnId) => {
 	let dir = 0;
 

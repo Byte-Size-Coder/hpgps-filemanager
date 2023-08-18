@@ -15,6 +15,7 @@ import { getAuth, signInAnonymously } from 'firebase/auth';
 
 import { fbStorage, fbFirestore } from './utils/firebase';
 import Popup from './components/Popup';
+import DocumentMobile from './components/DocumentMobile';
 
 const App = ({ api, database }) => {
 	const [files, setFiles] = useState([]);
@@ -22,6 +23,7 @@ const App = ({ api, database }) => {
 	const [editFile, setEditFile] = useState(null);
 	const [deleteConfirm, setDeleteConfirm] = useState(null);
 	const [deleteLoad, setDeleteLoad] = useState(false);
+	const [mobile, setMobile] = useState(false);
 
 	const handleDeleteFile = (file, id) => {
 		setDeleteConfirm({
@@ -69,7 +71,6 @@ const App = ({ api, database }) => {
 	};
 
 	const handleFilesUploaded = (docs) => {
-		console.log(docs);
 		const newFiles = [...files, ...docs];
 		setFiles(newFiles);
 	};
@@ -111,6 +112,15 @@ const App = ({ api, database }) => {
 		setTableFiles([...filesWithActions]);
 	}, [files]);
 
+	useEffect(() => {
+		function updateSize() {
+			setMobile(window.innerWidth < 1200);
+		}
+		window.addEventListener('resize', updateSize);
+		updateSize();
+		return () => window.removeEventListener('resize', updateSize);
+	}, []);
+
 	return (
 		<Box
 			sx={{
@@ -130,7 +140,8 @@ const App = ({ api, database }) => {
 				editFile={editFile}
 				onEditComplete={handleFileEditComplete}
 			/>
-			<DocumentTable files={tableFiles} />
+			{mobile ? <DocumentMobile files={tableFiles} /> : <DocumentTable files={tableFiles} />}
+
 			<Popup open={deleteConfirm !== null}>
 				<Box
 					sx={{

@@ -3,8 +3,6 @@ import {
 	Box,
 	Typography,
 	CircularProgress,
-	FormControl,
-	FormLabel,
 	FormControlLabel,
 	RadioGroup,
 	Radio,
@@ -21,6 +19,7 @@ import { fbStorage, fbFirestore } from '../utils/firebase';
 
 import '../../../styles/app.css';
 import AssociateSelect from './AssociateSelect';
+import GroupSelect from './GroupSelect';
 
 const Uploader = ({ database, onFileUploaded, api, editFile, onEditComplete }) => {
 	const [uploadFiles, setUploadFiles] = useState([]);
@@ -50,6 +49,7 @@ const Uploader = ({ database, onFileUploaded, api, editFile, onEditComplete }) =
 	const [editMode, setEditMode] = useState(false);
 	const [oldEditFile, setOldEditfile] = useState(null);
 	const [uploadType, setUploadType] = useState('uploadGroup');
+	const [clearGroup, setClearGroup] = useState(false);
 
 	const handleUpdateUploadType = (e) => {
 		setUploadType(e.target.value);
@@ -69,6 +69,36 @@ const Uploader = ({ database, onFileUploaded, api, editFile, onEditComplete }) =
 		const newSelections = { ...selections, [`${key}`]: [...selected] };
 		setSelections(newSelections);
 	};
+
+	function test1(entities) {
+		entities.checked = false;
+		if (entities.childrenList === undefined) {
+			return;
+		}
+		for (const ele of entities.childrenList) {
+			test1(ele);
+		}
+		return;
+	}
+
+	const handleUpdateGroup = (newGroupData) => {
+		setUploadData({ ...uploadData, groups: [...newGroupData] });
+		console.log(geotabData.groups);
+		if (clearGroup) {
+			setClearGroup(false);
+		}
+	};
+
+	function test(entities, result = []) {
+		if (entities.childrenList === undefined) {
+			return result;
+		}
+		result = [...result, ...entities.childrenList.map((c) => c.label)];
+		for (const ele of entities.childrenList) {
+			result = test(ele, result);
+		}
+		return result;
+	}
 
 	const organizeOwnersAndTags = () => {
 		const owners = {
@@ -96,11 +126,45 @@ const Uploader = ({ database, onFileUploaded, api, editFile, onEditComplete }) =
 		});
 
 		uploadData.groups.forEach((group) => {
-			owners.groups.push(group.label);
-			tags.push(group.label);
+			const grouptags = test(group);
+			owners.groups.push(group.label, ...grouptags);
+			tags.push(group.label, ...grouptags);
 		});
 
 		return { owners, tags };
+	};
+
+	function setCheckedFalse(group) {
+		group.checked = false;
+		if (group.childrenList === undefined) {
+			return;
+		}
+		for (const child of group.childrenList) {
+			setCheckedFalse(child);
+		}
+		return;
+	}
+
+	function setCheckedTrue(group, checkedOnes) {
+		if (checkedOnes.findIndex((g) => g.label === group.label) !== -1) {
+			group.checked = true;
+		}
+		if (group.childrenList === undefined) {
+			return;
+		}
+		for (const child of group.childrenList) {
+			setCheckedTrue(child, checkedOnes);
+		}
+		return;
+	}
+
+	const clearGroups = () => {
+		const newGroupData = [...geotabData.groups];
+		newGroupData.forEach((g) => {
+			setCheckedFalse(g);
+		});
+		//setClearGroup(true);
+		setGeotabData({ ...geotabData, groups: [...newGroupData] });
 	};
 
 	const clearUploadForm = () => {
@@ -114,6 +178,7 @@ const Uploader = ({ database, onFileUploaded, api, editFile, onEditComplete }) =
 
 		setUploadData({ ...emptyData });
 		setSelections({ ...emptyData });
+		clearGroups();
 	};
 
 	const handleCancelEdit = () => {
@@ -259,7 +324,6 @@ const Uploader = ({ database, onFileUploaded, api, editFile, onEditComplete }) =
 						results[2],
 						results[3]
 					);
-					console.log(results[3]);
 					setGeotabData(formatedData);
 				},
 				function (error) {
@@ -271,7 +335,6 @@ const Uploader = ({ database, onFileUploaded, api, editFile, onEditComplete }) =
 
 	useEffect(() => {
 		if (editFile !== null) {
-			console.log(editFile);
 			const storageRef = ref(fbStorage, editFile.path);
 			getBlob(storageRef).then((blob) => {
 				const fileToEdit = new File([blob], editFile.fileName);
@@ -281,12 +344,23 @@ const Uploader = ({ database, onFileUploaded, api, editFile, onEditComplete }) =
 				const dataTrailers = editFile.owners.trailers.map((tra) => `${tra}`);
 				const dataGroups = editFile.owners.groups.map((gro) => `${gro}`);
 
-				setSelections({
-					vehicles: [...formatOptions(dataVehicles)],
-					drivers: [...formatOptions(dataDrivers)],
-					trailers: [...formatOptions(dataTrailers)],
-					groups: [...formatOptions(dataGroups)],
-				});
+				if (dataGroups.length === 0) {
+					setUploadType('uploadSelection');
+					setSelections({
+						vehicles: [...formatOptions(dataVehicles)],
+						drivers: [...formatOptions(dataDrivers)],
+						trailers: [...formatOptions(dataTrailers)],
+						groups: [...formatOptions(dataGroups)],
+					});
+				} else {
+					setUploadType('uploadGroup');
+					const newGroupData = [...geotabData.groups];
+					newGroupData.forEach((g) => {
+						setCheckedTrue(g, [...formatOptions(dataGroups)]);
+					});
+					//setClearGroup(true);
+					setGeotabData({ ...geotabData, groups: [...newGroupData] });
+				}
 
 				setUploadFiles([fileToEdit]);
 
@@ -351,17 +425,11 @@ const Uploader = ({ database, onFileUploaded, api, editFile, onEditComplete }) =
 							/>
 						</Box>
 					</RadioGroup>
-					<AssociateSelect
-						options={geotabData.groups}
-						label="Group"
-						currentSelections={selections.groups}
-						onUpdateCurrentSelections={(selections) => {
-							handleUpdateCurrentSelections(selections, 'groups');
-						}}
-						onUpdateUploadSelections={(data) => handleUpdateUploadData('groups', data)}
-						isDisabled={uploadType !== 'uploadGroup'}
-						isGroup
-						selectWidth="50%"
+					<GroupSelect
+						groupData={geotabData.groups}
+						uploadType={uploadType}
+						onUpdateData={handleUpdateGroup}
+						forceClear={clearGroup}
 					/>
 				</Box>
 
@@ -376,18 +444,6 @@ const Uploader = ({ database, onFileUploaded, api, editFile, onEditComplete }) =
 						gap: '2rem',
 					}}
 				>
-					{/* <Autocomplete
-                        multiple
-                        id="type-select"
-                        options={currentOptions}
-                        value={currentSelection}
-                        getOptionLabel={(option) => option.label}
-                        filterSelectedOptions
-                        renderInput={(params) => <TextField {...params} label="Associate With" />}
-                        onChange={(event, newValue) => {
-                            updateSelection(newValue);
-                        }}
-                    /> */}
 					<AssociateSelect
 						options={geotabData.vehicles}
 						label="Vehicle"
@@ -448,7 +504,11 @@ const Uploader = ({ database, onFileUploaded, api, editFile, onEditComplete }) =
 									</Button>
 								</Box>
 							) : (
-								<Button variant="contained" onClick={handleUpload}>
+								<Button
+									variant="contained"
+									onClick={handleUpload}
+									sx={{ fontWeight: 'bold', fontSize: '18px' }}
+								>
 									Upload
 								</Button>
 							)}

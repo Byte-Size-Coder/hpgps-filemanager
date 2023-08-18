@@ -69,8 +69,6 @@ const AssociateSelect = ({
 		}
 	}, [currentSelections]);
 
-	console.log(currentSelections);
-
 	return (
 		<Box sx={{ width: { xs: '100%', sm: '100%', md: selectWidth } }}>
 			<Autocomplete

@@ -132,6 +132,7 @@ const DocumentTable = ({ files }) => {
 													className={`${
 														cell.id.includes('fileName') ? 'sticky' : ''
 													}`}
+													sx={{ borderRight: '1px solid lightgrey' }}
 												>
 													<div>
 														{flexRender(
