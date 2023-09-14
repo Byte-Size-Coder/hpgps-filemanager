@@ -83,7 +83,6 @@ const Uploader = ({ database, onFileUploaded, api, editFile, onEditComplete }) =
 
 	const handleUpdateGroup = (newGroupData) => {
 		setUploadData({ ...uploadData, groups: [...newGroupData] });
-		console.log(geotabData.groups);
 		if (clearGroup) {
 			setClearGroup(false);
 		}
@@ -409,6 +408,7 @@ const Uploader = ({ database, onFileUploaded, api, editFile, onEditComplete }) =
 						name="row-radio-buttons-group"
 						onChange={handleUpdateUploadType}
 						defaultValue={'uploadGroup'}
+						value={uploadType}
 					>
 						<Box sx={{ display: 'flex', gap: '2.5rem' }}>
 							<FormControlLabel

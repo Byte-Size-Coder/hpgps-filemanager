@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, IconButton, Tooltip } from '@mui/material';
 
-import { ref, getDownloadURL, getBlob } from 'firebase/storage';
+import { ref, getBlob } from 'firebase/storage';
 
 import { fbStorage } from '../utils/firebase';
 

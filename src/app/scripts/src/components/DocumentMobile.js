@@ -53,7 +53,11 @@ const DocumentMobile = ({ files }) => {
 						<Accordion
 							key={file.id}
 							expanded={file.id === expandedId}
-							onChange={() => setExpandedId(file.id)}
+							onChange={() => {
+								expandedId === file.id
+									? setExpandedId(null)
+									: setExpandedId(file.id);
+							}}
 						>
 							<AccordionSummary expandIcon={<ExpandMoreIcon />}>
 								<Typography variant="h5">{file.fileName}</Typography>
