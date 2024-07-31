@@ -311,14 +311,17 @@ const Uploader = ({ database, onFileUploaded, api, editFile, onEditComplete }) =
 		if (api) {
 			api.multiCall(
 				[
-					['Get', { typeName: 'Device' }],
-					['Get', { typeName: 'User', search: { isDriver: true } }],
+					['Get', { typeName: 'Device', search: {fromDate: new Date().toISOString() } }],
+					['Get', { typeName: 'User', search: { isDriver: true, fromDate: new Date().toISOString() } }],
 					['Get', { typeName: 'Trailer' }],
 					['Get', { typeName: 'Group' }],
 				],
 				function (results) {
+					console.log(results[0]);
+					const filteredDevices = results[0].filter(res => res.engineVehicleIdentificationNumber !== '?')
+					console.log(filteredDevices);
 					const formatedData = formatGeotabData(
-						results[0],
+						filteredDevices,
 						results[1],
 						results[2],
 						results[3]
