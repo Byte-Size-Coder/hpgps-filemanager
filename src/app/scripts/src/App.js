@@ -87,6 +87,17 @@ const App = ({ api, database }) => {
 							...doc.data(),
 						});
 					});
+
+					fetchedFiles.sort(function (a, b) {
+						if (a.fileName < b.fileName) {
+							return -1;
+						  }
+						  if (a.fileName > b.fileName) {
+							return 1;
+						  }
+						  return 0;
+					})
+
 					setFiles([...fetchedFiles]);
 				});
 			})
