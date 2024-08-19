@@ -93,7 +93,9 @@ const DocumentTable = ({ files }) => {
                         fontSize: '18px',
                     }}
                 >
-                    <CSVLink data={generateCSV(files)}>Export CSV</CSVLink>
+                    <CSVLink data={generateCSV(files)} filename={'geodoc.csv'}>
+                        Export CSV
+                    </CSVLink>
                 </Box>
             </Box>
             <Box sx={{ width: '100%' }}>

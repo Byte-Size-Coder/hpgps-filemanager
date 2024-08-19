@@ -7,10 +7,15 @@ import {
     RadioGroup,
     Radio,
     TextField,
+    Switch,
 } from '@mui/material';
 import { formatGeotabData, formatOptions } from '../utils/formatter';
 import { collection, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getBlob, deleteObject } from 'firebase/storage';
+import dayjs, { Dayjs } from 'dayjs';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
 import { Button } from '@mui/material';
 
@@ -56,6 +61,8 @@ const Uploader = ({
     const [editMode, setEditMode] = useState(false);
     const [editName, setEditName] = useState('');
     const [oldEditFile, setOldEditfile] = useState(null);
+    const [hasExpiry, setHasExpiry] = useState(false);
+    const [expiryDate, setExpiryDate] = useState(dayjs());
     const [uploadType, setUploadType] = useState('uploadGroup');
     const [clearGroup, setClearGroup] = useState(false);
 
@@ -222,6 +229,10 @@ const Uploader = ({
                 };
             }
 
+            if (hasExpiry) {
+                editedDoc.expiryDate = expiryDate.toISOString();
+            }
+
             await updateDoc(
                 doc(fbFirestore, `${database}/${editFile.id}`),
                 editedDoc
@@ -305,6 +316,10 @@ const Uploader = ({
                 path: `${database}/${docRef.id}/${filename}`,
                 ...organizeOwnersAndTags(),
             };
+
+            if (hasExpiry) {
+                editDoc.expiryDate = expiryDate.toISOString();
+            }
 
             await setDoc(docRef, editDoc);
 
@@ -401,6 +416,13 @@ const Uploader = ({
 
                 setUploadFiles([fileToEdit]);
 
+                if (editFile.expiryDate) {
+                    setHasExpiry(true);
+                    setExpiryDate(dayjs(editFile.expiryDate));
+                } else {
+                    setHasExpiry(false);
+                }
+
                 setEditMode(true);
                 setEditName(editFile.fileName);
                 setOldEditfile(fileToEdit);
@@ -415,6 +437,10 @@ const Uploader = ({
             });
         }
     }, [editFile]);
+
+    useEffect(() => {
+        console.log(expiryDate);
+    }, [expiryDate]);
 
     return (
         <Box className="geotabToolbar" id="upload-area">
@@ -556,6 +582,35 @@ const Uploader = ({
                         }
                         isDisabled={uploadType !== 'uploadSelection'}
                     />
+                </Box>
+                <Box>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'Center',
+                            gap: '1rem',
+                            marginBottom: '1rem',
+                        }}
+                    >
+                        <Typography>Has Expiry Date</Typography>
+                        <Switch
+                            checked={hasExpiry}
+                            value={hasExpiry}
+                            onChange={(e) => setHasExpiry(e.target.checked)}
+                        />
+                    </Box>
+                    {hasExpiry && (
+                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                            <DatePicker
+                                label="File Expire Date"
+                                value={expiryDate}
+                                onChange={(newValue) => {
+                                    setExpiryDate(newValue);
+                                    console.log(newValue);
+                                }}
+                            />
+                        </LocalizationProvider>
+                    )}
                 </Box>
                 <Box>
                     {loading ? (
