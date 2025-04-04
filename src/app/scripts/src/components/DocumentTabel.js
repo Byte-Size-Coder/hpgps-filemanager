@@ -31,7 +31,7 @@ import {
     flexRender,
 } from '@tanstack/react-table';
 
-import { columns, fuzzyFilter } from '../utils/tabel-helper';
+import { columns, stringMatchFilter, globalStringFilter } from '../utils/tabel-helper';
 
 import '../../../styles/app.css';
 import { generateCSV } from '../utils/csv-generator';
@@ -45,7 +45,7 @@ const DocumentTable = ({ files }) => {
         data: files,
         columns,
         filterFns: {
-            fuzzy: fuzzyFilter,
+            fuzzy: stringMatchFilter,
         },
         state: {
             columnFilters,
@@ -53,7 +53,7 @@ const DocumentTable = ({ files }) => {
         },
         onColumnFiltersChange: setColumnFilters,
         onGlobalFilterChange: setGlobalFilter,
-        globalFilterFn: fuzzyFilter,
+        globalFilterFn: globalStringFilter,
         getCoreRowModel: getCoreRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         getSortedRowModel: getSortedRowModel(),

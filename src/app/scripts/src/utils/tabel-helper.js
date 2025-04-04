@@ -181,3 +181,24 @@ export const fuzzyFilter = (row, columnId, value, addMeta) => {
     // Return if the item should be filtered in/out
     return itemRank.passed;
 };
+
+export const stringMatchFilter = (row, columnId, filterValue) => {
+    let rowValue = row.getValue(columnId);
+    if (rowValue == null) return false;
+    // If it's an array, join its elements into a string.
+    if (Array.isArray(rowValue)) {
+      rowValue = rowValue.join(' ');
+    }
+    return String(rowValue).toLowerCase().includes(String(filterValue).toLowerCase());
+  };
+
+  export const globalStringFilter = (row, _, filterValue) => {
+    return row.getAllCells().some(cell => {
+      let cellValue = cell.getValue();
+      if (cellValue == null) return false;
+      if (Array.isArray(cellValue)) {
+        cellValue = cellValue.join(' ');
+      }
+      return String(cellValue).toLowerCase().includes(String(filterValue).toLowerCase());
+    });
+  };
