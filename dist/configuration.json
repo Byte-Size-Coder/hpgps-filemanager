@@ -4,12 +4,12 @@
   "version": "0.0.1",
   "items": [
     {
-      "url": "High Point File Manager/hpgpsFilemanager.html",
+      "url": "High Point File Manager/https://cdn.jsdelivr.net/gh/Byte-Size-Coder/hpgps-filemanager@latest/dist/hpgps-filemanager.html",
       "path": "",
       "menuName": {
         "en": "GeoDocs"
       },
-      "icon": "images/icon.svg"
+      "icon": "https://cdn.jsdelivr.net/gh/Byte-Size-Coder/hpgps-filemanager@latest/dist/images/icon.svg"
     }
   ]
 }

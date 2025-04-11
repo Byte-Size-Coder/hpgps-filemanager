@@ -6,6 +6,7 @@ import DocumentTable from './components/DocumentTabel';
 import FileActions from './components/FileActions';
 
 import 'filepond/dist/filepond.min.css';
+import 'react-dropdown-tree-select/dist/styles.css';
 import '../../styles/app.css';
 
 import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';

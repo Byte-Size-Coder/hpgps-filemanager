@@ -4,12 +4,18 @@
 	"version": "0.0.1",
 	"items": [
 		{
-			"url": "https://cdn.jsdelivr.net/gh/Byte-Size-Coder/hpgps-filemanager@master/dist/hpgps-filemanager.html",
+			"url": "https://cdn.jsdelivr.net/gh/Byte-Size-Coder/hpgps-filemanager@latest/dist/hpgps-filemanager.html",
 			"path": "",
 			"menuName": {
 				"en": "GeoDocs"
 			},
-			"icon": "https://cdn.jsdelivr.net/gh/Byte-Size-Coder/hpgps-filemanager@master/dist/images/icon.svg"
+			"icon": "https://cdn.jsdelivr.net/gh/Byte-Size-Coder/hpgps-filemanager@latest/dist/images/icon.svg"
 		}
-	]
+	],
+	"dev": {
+		"root": "hpgpsFilemanager",
+		"dist": {
+			"host": "https://www.example.com/myaddin/"
+		}
+	}
 }
