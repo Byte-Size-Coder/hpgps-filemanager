@@ -1,3 +1,6 @@
+@import 'filepond/dist/filepond.min.css';
+@import 'react-dropdown-tree-select/dist/styles.css';
+
 .hidden {
 	display: none;
 }
