@@ -1,0 +1,15 @@
+{
+  "name": "High Point File Manager",
+  "supportEmail": "israel.margulies@highpointgps.com",
+  "version": "0.0.1",
+  "items": [
+    {
+      "url": "High Point File Manager/hpgpsFilemanager.html",
+      "path": "",
+      "menuName": {
+        "en": "GeoDocs"
+      },
+      "icon": "images/icon.svg"
+    }
+  ]
+}

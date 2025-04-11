@@ -355,10 +355,18 @@ const Uploader = ({
                     const filteredDevices = results[0].filter(
                         (res) => res.engineVehicleIdentificationNumber !== '?'
                     );
+                    const trailerNames = results[2].map(t => t.id);
+                    const activeTrailers = results[0].filter(res => {
+                        const isActive = new Date(res.activeTo) > new Date();
+                        const isId = res.tmpTrailerId && trailerNames.findIndex(t => t === res.tmpTrailerId) !== -1
+                        return isActive && isId;
+                    });
+
+                    console.log(activeTrailers);
                     const formatedData = formatGeotabData(
                         filteredDevices,
                         results[1],
-                        results[2],
+                        activeTrailers,
                         results[3]
                     );
                     setGeotabData(formatedData);
