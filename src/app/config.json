@@ -1,16 +1,16 @@
 {
-	"name": "High Point File Manager",
+	"name": "GeoDocs",
 	"supportEmail": "israel.margulies@highpointgps.com",
 	"version": "0.0.1",
 	"items": [
-		{
-			"url": "https://cdn.jsdelivr.net/gh/Byte-Size-Coder/hpgps-filemanager@latest/dist/hpgps-filemanager.html",
-			"path": "",
-			"menuName": {
-				"en": "GeoDocs"
-			},
-			"icon": "https://cdn.jsdelivr.net/gh/Byte-Size-Coder/hpgps-filemanager@latest/dist/images/icon.svg"
-		}
+	  {
+		"url": "https://cdn.jsdelivr.net/gh/Byte-Size-Coder/hpgps-filemanager@latest/dist/hpgpsFilemanager.html",
+		"path": "",
+		"menuName": {
+		  "en": "GeoDocs"
+		},
+		"icon": "https://cdn.jsdelivr.net/gh/Byte-Size-Coder/hpgps-filemanager@latest/dist/images/icon.svg"
+	  }
 	],
 	"dev": {
 		"root": "hpgpsFilemanager",
