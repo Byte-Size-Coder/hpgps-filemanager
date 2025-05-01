@@ -19,13 +19,10 @@ const DocumentMobile = ({ files }) => {
     const [expandedId, setExpandedId] = useState(null);
     const [filterFiles, setFilterFiles] = useState([]);
 
-    console.log(files);
-
     useEffect(() => {
         if (globalFilter === '') {
             setFilterFiles([...files]);
         } else {
-            console.log('IN HERE?');
             const newFilterFiles = files.filter((file) =>
                 file.fileName.toLowerCase().includes(globalFilter.toLowerCase())
             );

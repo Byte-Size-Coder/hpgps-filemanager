@@ -1,5 +1,5 @@
 export function generateCSV(fileTable) {
-    let csvData = [['File', 'Groups', 'Vehicles', 'Drivers', 'Trailers']];
+    let csvData = [['File', 'Groups', 'Vehicles', 'Drivers', 'Trailers', 'Expiry Date']];
 
     fileTable.forEach((fileData) => {
         csvData.push([
@@ -8,6 +8,7 @@ export function generateCSV(fileTable) {
             combineData(fileData.owners.vehicles),
             combineData(fileData.owners.drivers),
             combineData(fileData.owners.trailers),
+            fileData.expiryDate ? convertDateToReadable(fileData.expiryDate) : 'None (Active)'
         ]);
     });
 
@@ -16,4 +17,19 @@ export function generateCSV(fileTable) {
 
 function combineData(arrayData) {
     return arrayData.join(', ');
+}
+
+function convertDateToReadable(iso) {
+    const date = new Date(iso);
+    let expired = false;
+
+    if(date < new Date()) {
+        expired = true;
+    }
+
+    return date.toLocaleDateString('en-US', {
+        year:  'numeric',
+        month: 'long',
+        day:   'numeric'
+      }) + ` (${expired ? 'Expired' : 'Active'})`
 }

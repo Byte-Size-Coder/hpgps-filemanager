@@ -28,8 +28,6 @@ const GroupSelect = ({ groupData, onUpdateData, uploadType }) => {
 		onUpdateData(newGroupData);
 	};
 
-	console.log(uploadType);
-
 	return (
 		<DropdownTreeSelect
 			id="label"

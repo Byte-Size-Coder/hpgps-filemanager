@@ -75,6 +75,8 @@ const App = ({ api, database }) => {
 	};
 
 	useEffect(() => {
+		const params = new URLSearchParams(window.location.search);
+		const database = params.get('test');
 		const auth = getAuth();
 		signInAnonymously(auth)
 			.then(() => {

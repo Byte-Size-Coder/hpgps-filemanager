@@ -362,7 +362,6 @@ const Uploader = ({
                         return isActive && isId;
                     });
 
-                    console.log(activeTrailers);
                     const formatedData = formatGeotabData(
                         filteredDevices,
                         results[1],
@@ -446,9 +445,6 @@ const Uploader = ({
         }
     }, [editFile]);
 
-    useEffect(() => {
-        console.log(expiryDate);
-    }, [expiryDate]);
 
     return (
         <Box className="geotabToolbar" id="upload-area">

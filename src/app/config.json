@@ -9,7 +9,10 @@
 		"menuName": {
 		  "en": "GeoDocs"
 		},
-		"icon": "https://cdn.jsdelivr.net/gh/Byte-Size-Coder/hpgps-filemanager@latest/dist/images/icon.svg"
+		"icon": "https://cdn.jsdelivr.net/gh/Byte-Size-Coder/hpgps-filemanager@latest/dist/images/icon.svg",
+		"customData": {
+			"testData": "testresult"
+		  }
 	  }
 	],
 	"dev": {
