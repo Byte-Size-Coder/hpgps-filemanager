@@ -107,10 +107,12 @@ const App = ({ api, database }) => {
 			getDocs(collection(fbFirestore, database)).then((snapshot) => {
 				const fetchedFiles = [];
 				snapshot.forEach((doc) => {
-					fetchedFiles.push({
-						id: doc.id,
-						...doc.data(),
-					});
+					if(doc.data().fileName) {
+						fetchedFiles.push({
+							id: doc.id,
+							...doc.data(),
+						});
+					}
 				});
 	
 				fetchedFiles.sort((a, b) => a.fileName.localeCompare(b.fileName));
@@ -219,6 +221,7 @@ const App = ({ api, database }) => {
 					<Box
 					sx={{
 						display: 'flex',
+						flexDirection: 'column',
 						justifyContent: 'center',
 						alignItems: 'center',
 						height: '100vh',
@@ -228,7 +231,7 @@ const App = ({ api, database }) => {
 						Invalid Access Code
 					</Typography>
 					<Typography variant="h4" color="error">
-						You cannot access this database files.
+						You cannot access this database's geodoc files.
 					</Typography>
 				</Box>
 				)}
