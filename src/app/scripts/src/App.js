@@ -75,14 +75,18 @@ const App = ({ api, database }) => {
 	};
 
 	useEffect(() => {
-		const params = new URLSearchParams(window.location.search);
-		console.log('GETTING PARAMS');
-		console.log(params);
-		const test = params.get('test');
-		console.log(test);
-
-		const currentUrl = window.location.href;
-		console.log(currentUrl);
+		const hash = window.location.hash; 
+		// e.g. "#addin-geodocs-hpgpsFilemanager?test=hello"
+		
+		// Step 1: Split on '?' to separate path and params
+		const [path, queryString] = hash.split('?');
+		
+		if (queryString) {
+		  const params = new URLSearchParams(queryString);
+		  const testValue = params.get('test');
+		  console.log('test:', testValue);
+		}
+		
 		const auth = getAuth();
 		signInAnonymously(auth)
 			.then(() => {
