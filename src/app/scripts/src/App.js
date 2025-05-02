@@ -76,8 +76,13 @@ const App = ({ api, database }) => {
 
 	useEffect(() => {
 		const params = new URLSearchParams(window.location.search);
+		console.log('GETTING PARAMS');
+		console.log(params);
 		const test = params.get('test');
 		console.log(test);
+
+		const currentUrl = window.location.href;
+		console.log(currentUrl);
 		const auth = getAuth();
 		signInAnonymously(auth)
 			.then(() => {
