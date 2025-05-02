@@ -10,11 +10,10 @@ import '../../styles/app.css';
 import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { deleteObject, ref } from 'firebase/storage';
 
-import { getAuth, signInAnonymously } from 'firebase/auth';
-
 import { fbStorage, fbFirestore } from './utils/firebase';
 import Popup from './components/Popup';
 import DocumentMobile from './components/DocumentMobile';
+import { verifyDatabaseCode } from './utils/verifyDatabaseCode';
 
 const App = ({ api, database }) => {
 	const [files, setFiles] = useState([]);
@@ -23,6 +22,7 @@ const App = ({ api, database }) => {
 	const [deleteConfirm, setDeleteConfirm] = useState(null);
 	const [deleteLoad, setDeleteLoad] = useState(false);
 	const [mobile, setMobile] = useState(false);
+	const [code, setCode] = useState('');
 
 	const handleDeleteFile = (file, id) => {
 		setDeleteConfirm({
@@ -75,48 +75,41 @@ const App = ({ api, database }) => {
 	};
 
 	useEffect(() => {
-		const hash = window.location.hash; 
-		// e.g. "#addin-geodocs-hpgpsFilemanager?test=hello"
-		
-		// Step 1: Split on '?' to separate path and params
+		const hash = window.location.hash;
 		const [path, queryString] = hash.split('?');
-
-		console.log('TRYING TO GET QUERY PARAMS');
-		
+	
+		let codeValue = '';
+	
 		if (queryString) {
-		  const params = new URLSearchParams(queryString);
-		  const testValue = params.get('test');
-		  console.log('test:', testValue);
+			const params = new URLSearchParams(queryString);
+			codeValue = params.get('code');
+			console.log('code from URL:', codeValue);
 		}
-		
-		const auth = getAuth();
-		signInAnonymously(auth)
-			.then(() => {
-				getDocs(collection(fbFirestore, database)).then((snapshot) => {
-					const fetchedFiles = [];
-					snapshot.forEach((doc) => {
-						fetchedFiles.push({
-							id: doc.id,
-							...doc.data(),
-						});
+
+		setCode(codeValue);
+	
+		if (!codeValue) return;
+	
+		verifyDatabaseCode(codeValue, database, fbFirestore).then((isValid) => {
+			if (!isValid) {
+				console.warn('Invalid or missing code');
+				return;
+			}
+	
+			// ✅ Code valid — load documents
+			getDocs(collection(fbFirestore, database)).then((snapshot) => {
+				const fetchedFiles = [];
+				snapshot.forEach((doc) => {
+					fetchedFiles.push({
+						id: doc.id,
+						...doc.data(),
 					});
-
-					fetchedFiles.sort(function (a, b) {
-						if (a.fileName < b.fileName) {
-							return -1;
-						  }
-						  if (a.fileName > b.fileName) {
-							return 1;
-						  }
-						  return 0;
-					})
-
-					setFiles([...fetchedFiles]);
 				});
-			})
-			.catch((error) => {
-				console.error(error);
+	
+				fetchedFiles.sort((a, b) => a.fileName.localeCompare(b.fileName));
+				setFiles(fetchedFiles);
 			});
+		});
 	}, []);
 
 	useEffect(() => {
@@ -159,6 +152,7 @@ const App = ({ api, database }) => {
 				storage={fbStorage}
 				firestore={fbFirestore}
 				database={database}
+				code={code}
 				api={api}
 				onFileUploaded={handleFilesUploaded}
 				editFile={editFile}

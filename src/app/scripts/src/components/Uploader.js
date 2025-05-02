@@ -26,9 +26,11 @@ import { fbStorage, fbFirestore } from '../utils/firebase';
 import '../../../styles/app.css';
 import AssociateSelect from './AssociateSelect';
 import GroupSelect from './GroupSelect';
+import { verifyDatabaseCode } from '../utils/verifyDatabaseCode';
 
 const Uploader = ({
     database,
+    code,
     onFileUploaded,
     api,
     editFile,
@@ -191,6 +193,13 @@ const Uploader = ({
 
     const handeEditFile = async () => {
         setError('');
+
+        const isValid = await verifyDatabaseCode(code, database, fbFirestore);
+        if (!isValid) {
+            setError('Invalid access code — unable to update file.');
+            return;
+        }
+
         if (uploadFiles.length <= 0) {
             setError(
                 'Must have a file selected for upload. Please drop a file or select one above.'
@@ -265,6 +274,12 @@ const Uploader = ({
 
     const handleUpload = async () => {
         setError('');
+
+        const isValid = await verifyDatabaseCode(code, database, fbFirestore);
+        if (!isValid) {
+            setError('Invalid access code — unable to upload file.');
+            return;
+        }
 
         if (uploadFiles.length <= 0) {
             setError(

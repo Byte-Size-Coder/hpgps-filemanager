@@ -10,7 +10,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 const FileActions = ({ fileData, fileId, onDeleteFile, onEditFile }) => {
-	const handleDownload = () => {
+	
+	const handleDownload = async () => {
 		const storageRef = ref(fbStorage, fileData.path);
 		getBlob(storageRef)
 			.then((blob) => {
