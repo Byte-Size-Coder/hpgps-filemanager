@@ -80,6 +80,8 @@ const App = ({ api, database }) => {
 		
 		// Step 1: Split on '?' to separate path and params
 		const [path, queryString] = hash.split('?');
+
+		console.log('TRYING TO GET QUERY PARAMS');
 		
 		if (queryString) {
 		  const params = new URLSearchParams(queryString);
