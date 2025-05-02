@@ -23,6 +23,7 @@ const App = ({ api, database }) => {
 	const [deleteLoad, setDeleteLoad] = useState(false);
 	const [mobile, setMobile] = useState(false);
 	const [code, setCode] = useState('');
+	const [codeValid, setCodeValid] = useState(null);
 
 	const handleDeleteFile = (file, id) => {
 		setDeleteConfirm({
@@ -88,15 +89,21 @@ const App = ({ api, database }) => {
 
 		setCode(codeValue);
 	
-		if (!codeValue) return;
+		if (!codeValue) {
+			setCodeValid(false);
+			return;
+		}
 	
 		verifyDatabaseCode(codeValue, database, fbFirestore).then((isValid) => {
 			if (!isValid) {
 				console.warn('Invalid or missing code');
+				setCodeValid(false);
 				return;
 			}
+
+			setCodeValid(true);
 	
-			// ✅ Code valid — load documents
+			// Code valid — load documents
 			getDocs(collection(fbFirestore, database)).then((snapshot) => {
 				const fetchedFiles = [];
 				snapshot.forEach((doc) => {
@@ -148,7 +155,22 @@ const App = ({ api, database }) => {
 			}}
 			id="HPGPS"
 		>
-			<Uploader
+			{codeValid === null ? (
+				<Box
+			sx={{
+				display: 'flex',
+				justifyContent: 'center',
+				alignItems: 'center',
+				height: '100vh',
+			}}
+		>
+			<CircularProgress />
+		</Box>
+			) :
+			<>
+				{codeValid === true ? (
+					<>
+	<Uploader
 				storage={fbStorage}
 				firestore={fbFirestore}
 				database={database}
@@ -192,6 +214,27 @@ const App = ({ api, database }) => {
 					)}
 				</Box>
 			</Popup>
+					</>
+				):(
+					<Box
+					sx={{
+						display: 'flex',
+						justifyContent: 'center',
+						alignItems: 'center',
+						height: '100vh',
+					}}
+				>
+					<Typography variant="h2" color="error">
+						Invalid Access Code
+					</Typography>
+					<Typography variant="h4" color="error">
+						You cannot access this database files.
+					</Typography>
+				</Box>
+				)}
+			</>
+			}
+		
 		</Box>
 	);
 };
