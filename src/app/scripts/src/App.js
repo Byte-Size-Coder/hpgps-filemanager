@@ -14,6 +14,7 @@ import { fbStorage, fbFirestore } from './utils/firebase';
 import Popup from './components/Popup';
 import DocumentMobile from './components/DocumentMobile';
 import { verifyDatabaseCode } from './utils/verifyDatabaseCode';
+import { getAuth, signInAnonymously } from 'firebase/auth';
 
 const App = ({ api, database }) => {
 	const [files, setFiles] = useState([]);
@@ -86,7 +87,7 @@ const App = ({ api, database }) => {
 			codeValue = params.get('code');
 			console.log('code from URL:', codeValue);
 		}
-
+	
 		setCode(codeValue);
 	
 		if (!codeValue) {
@@ -100,24 +101,33 @@ const App = ({ api, database }) => {
 				setCodeValid(false);
 				return;
 			}
+	
+			const auth = getAuth();
+			signInAnonymously(auth)
+				.then(() => {
+					setCodeValid(true);
 
-			setCodeValid(true);
-	
-			// Code valid — load documents
-			getDocs(collection(fbFirestore, database)).then((snapshot) => {
-				const fetchedFiles = [];
-				snapshot.forEach((doc) => {
-					if(doc.data().fileName) {
-						fetchedFiles.push({
-							id: doc.id,
-							...doc.data(),
+					getDocs(collection(fbFirestore, database)).then((snapshot) => {
+						const fetchedFiles = [];
+						snapshot.forEach((doc) => {
+							if (doc.data().fileName) {
+								fetchedFiles.push({
+									id: doc.id,
+									...doc.data(),
+								});
+							}
 						});
-					}
-				});
 	
-				fetchedFiles.sort((a, b) => a.fileName.localeCompare(b.fileName));
-				setFiles(fetchedFiles);
-			});
+						fetchedFiles.sort((a, b) =>
+							a.fileName.localeCompare(b.fileName)
+						);
+						setFiles(fetchedFiles);
+					});
+				})
+				.catch((err) => {
+					console.error('Anonymous sign-in failed:', err);
+					setCodeValid(false);
+				});
 		});
 	}, []);
 
