@@ -50,7 +50,7 @@ geotab.addin.hpgpsFilemanager = function () {
          */
         focus: function (freshApi, freshState) {
             // getting the current user to display in the UI
-            freshApi.getSession((session) => {
+            freshApi.getSession((session, server) => {
                 elAddin.querySelector('#hpgpsFilemanager-user').textContent = session.userName;
 
                 elAddin.className = '';
@@ -58,7 +58,7 @@ geotab.addin.hpgpsFilemanager = function () {
                 const container = document.getElementById('app');
                 if (container) {
                     const root = createRoot(container);
-                    root.render(<App api={freshApi} database={session.database} />);
+                    root.render(<App api={freshApi} database={session.database} session={session} server={server} />);
                 }
             });
         },

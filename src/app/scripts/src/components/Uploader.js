@@ -10,31 +10,25 @@ import {
     Switch,
 } from '@mui/material';
 import { formatGeotabData, formatOptions } from '../utils/formatter';
-import { collection, doc, setDoc, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getBlob, deleteObject } from 'firebase/storage';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-
 import { Button } from '@mui/material';
-
 import { FilePond } from 'react-filepond';
-
-import { fbStorage, fbFirestore } from '../utils/firebase';
-
 import '../../../styles/app.css';
 import AssociateSelect from './AssociateSelect';
 import GroupSelect from './GroupSelect';
-import { verifyDatabaseCode } from '../utils/verifyDatabaseCode';
 
 const Uploader = ({
     database,
-    code,
     onFileUploaded,
     api,
+    session,
+    server,
     editFile,
     onEditComplete,
+    onValidationError,
 }) => {
     const [uploadFiles, setUploadFiles] = useState([]);
     const [geotabData, setGeotabData] = useState({
@@ -62,7 +56,7 @@ const Uploader = ({
     const [loading, setLoading] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [editName, setEditName] = useState('');
-    const [oldEditFile, setOldEditfile] = useState(null);
+    const [editLoad, setEditLoad] = useState(false);
     const [hasExpiry, setHasExpiry] = useState(false);
     const [expiryDate, setExpiryDate] = useState(dayjs());
     const [uploadType, setUploadType] = useState('uploadGroup');
@@ -194,12 +188,6 @@ const Uploader = ({
     const handeEditFile = async () => {
         setError('');
 
-        const isValid = await verifyDatabaseCode(code, database, fbFirestore);
-        if (!isValid) {
-            setError('Invalid access code — unable to update file.');
-            return;
-        }
-
         if (uploadFiles.length <= 0) {
             setError(
                 'Must have a file selected for upload. Please drop a file or select one above.'
@@ -217,48 +205,64 @@ const Uploader = ({
         setLoading(true);
 
         try {
-            let editedDoc = {};
 
-            // skip any file edit logic as it has not changed
-            if (editName === editFile.fileName) {
-                editedDoc = organizeOwnersAndTags();
-            } else {
-                const storageRef = ref(fbStorage, editFile.path);
-
-                await deleteObject(storageRef);
-                const newStorageRef = ref(
-                    fbStorage,
-                    `${database}/${editFile.id}/${editName}`
-                );
-                await uploadBytes(newStorageRef, uploadFiles[0]);
-                editedDoc = {
-                    fileName: editName,
-                    path: `${database}/${editFile.id}/${editName}`,
-                    ...organizeOwnersAndTags(),
+            const sessionInfo = {
+                    database,
+                    sessionId: session.sessionId,
+                    userName:  session.userName,
+                    server,
                 };
-            }
+
+            const { owners, tags } = organizeOwnersAndTags();
+            const messageBody = {
+                session:   sessionInfo,
+                database,
+                fileId:    editFile.id,
+                filePath:  editFile.path,
+                fileName:  editName,       // new name
+                owners,
+                tags,
+            };
 
             if (hasExpiry) {
-                editedDoc.expiryDate = expiryDate.toISOString();
+                messageBody.expiryDate = expiryDate.toISOString();
             }
 
-            await updateDoc(
-                doc(fbFirestore, `${database}/${editFile.id}`),
-                editedDoc
+            if (editName !== editFile.fileName) {
+                const file     = uploadFiles[0];
+                const base64   = await fileToBase64(file);
+                messageBody.fileData    = base64;
+                messageBody.contentType = file.type;
+            }
+
+             const response = await fetch(
+                'https://us-central1-geotabfiles.cloudfunctions.net/editDocFile',
+                {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify(messageBody)
+                }
             );
 
+            const data = await response.json();
+
+            if (!response.ok) {
+                if (data.valid === false) {
+                    onValidationError()
+                }
+
+                throw new Error(err.error || 'Upload failed');
+            }
+
             clearUploadForm();
-            onEditComplete(editFile.id, editedDoc);
-            setLoading(false);
-            setEditMode(false);
-
+            onEditComplete(editFile.id, data);
             setSuccess('File successfully updated!');
-
-            setTimeout(() => {
-                setSuccess('');
-            }, 3000);
-        } catch (error) {
-            console.error(error);
+            setTimeout(() => setSuccess(''), 3000);
+            setEditMode(false);
+        } catch (err) {
+            console.error(err);
+            setError(err.message);
+        } finally {
             setLoading(false);
         }
     };
@@ -274,12 +278,6 @@ const Uploader = ({
 
     const handleUpload = async () => {
         setError('');
-
-        const isValid = await verifyDatabaseCode(code, database, fbFirestore);
-        if (!isValid) {
-            setError('Invalid access code — unable to upload file.');
-            return;
-        }
 
         if (uploadFiles.length <= 0) {
             setError(
@@ -318,28 +316,59 @@ const Uploader = ({
             });
     };
 
+    const fileToBase64 = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = reject;
+        reader.onload = () => {
+            // reader.result is "data:<mime>;base64,AAAA…"
+            const dataUrl = reader.result;
+            const base64  = dataUrl.split(',')[1];
+            resolve(base64);
+        };
+        reader.readAsDataURL(file);
+    });
+
     const uploadFile = async (filename, file) => {
-        const docRef = doc(collection(fbFirestore, database));
-        const storageRef = ref(
-            fbStorage,
-            `${database}/${docRef.id}/${filename}`
+        const base64 = await fileToBase64(file);
+
+        const sessionInfo = {
+            database,
+            sessionId: session.sessionId,
+            userName:  session.userName,
+            server
+        };
+
+        const { owners, tags } = organizeOwnersAndTags();
+
+        const messageBody = {
+            session: sessionInfo,
+            database,
+            fileName: filename,
+            fileData: base64,
+            contentType: file.type,
+            owners: owners,
+            tags: tags,
+            expiryDate: hasExpiry ? expiryDate.toISOString() : undefined
+        };
+
+         const response = await fetch(
+            'https://us-central1-geotabfiles.cloudfunctions.net/uploadDocFile',
+            {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(messageBody)
+            }
         );
+        if (!response.ok) {
+            const errorData = await response.json();
 
-        return uploadBytes(storageRef, file).then(async () => {
-            const editDoc = {
-                fileName: filename,
-                path: `${database}/${docRef.id}/${filename}`,
-                ...organizeOwnersAndTags(),
-            };
-
-            if (hasExpiry) {
-                editDoc.expiryDate = expiryDate.toISOString();
+            if (errorData.valid === false) {
+               onValidationError();
             }
 
-            await setDoc(docRef, editDoc);
-
-            return { id: docRef.id, ...editDoc };
-        });
+           console.error('Fetched Files failed: ', errorData.error ? errorData.error : '');
+        }
+        return response.json();
     };
 
     useEffect(() => {
@@ -393,77 +422,113 @@ const Uploader = ({
     }, [api]);
 
     useEffect(() => {
-        if (editFile !== null) {
-            const storageRef = ref(fbStorage, editFile.path);
-            getBlob(storageRef).then((blob) => {
-                const fileToEdit = new File([blob], editFile.fileName);
+  if (editFile === null) return;
 
-                const dataVehicles = editFile.owners.vehicles.map(
-                    (veh) => `${veh}`
-                );
-                const dataDrivers = editFile.owners.drivers.map(
-                    (dri) => `${dri}`
-                );
-                const dataTrailers = editFile.owners.trailers.map(
-                    (tra) => `${tra}`
-                );
-                const dataGroups = editFile.owners.groups.map(
-                    (gro) => `${gro}`
-                );
+  const fetchEditFile = async () => {
+    try {
+      const sessionInfo = {
+        database,
+        sessionId: session.sessionId,
+        userName:  session.userName,
+        server,
+      };
+      const messageBody = {
+        session:  sessionInfo,
+        filePath: editFile.path,
+        fileName: editFile.fileName,
+      };
 
-                if (dataGroups.length === 0) {
-                    setUploadType('uploadSelection');
-                    setSelections({
-                        vehicles: [...formatOptions(dataVehicles)],
-                        drivers: [...formatOptions(dataDrivers)],
-                        trailers: [...formatOptions(dataTrailers)],
-                        groups: [...formatOptions(dataGroups)],
-                    });
-                } else {
-                    setUploadType('uploadGroup');
-                    const newGroupData = [...geotabData.groups];
-                    newGroupData.forEach((g) => {
-                        setCheckedTrue(g, [...formatOptions(dataGroups)]);
-                    });
-                    //setClearGroup(true);
-                    setGeotabData({ ...geotabData, groups: [...newGroupData] });
-                }
+      setEditLoad(true);
 
-                setUploadData({
-                    vehicles: [...formatOptions(dataVehicles)],
-                    drivers: [...formatOptions(dataDrivers)],
-                    trailers: [...formatOptions(dataTrailers)],
-                    groups: [...formatOptions(dataGroups)],
-                });
-
-                setUploadFiles([fileToEdit]);
-
-                if (editFile.expiryDate) {
-                    setHasExpiry(true);
-                    setExpiryDate(dayjs(editFile.expiryDate));
-                } else {
-                    setHasExpiry(false);
-                }
-
-                setEditMode(true);
-                setEditName(editFile.fileName);
-                setOldEditfile(fileToEdit);
-                const uploadEl = document.getElementById('upload-area');
-
-                if (uploadEl) {
-                    uploadEl.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start',
-                    });
-                }
-            });
+      const response = await fetch(
+        'https://us-central1-geotabfiles.cloudfunctions.net/readDocFile',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json'
+          },
+          body: JSON.stringify(messageBody)
         }
-    }, [editFile]);
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (errorData.valid === false) {
+          setValidationError(true);
+        }
+        console.error('Failed to fetch edit file:', errorData.error || '');
+        return;
+      }
+
+      // Turn the streamed bytes back into a File
+      const blob      = await response.blob();
+      const fileToEdit = new File([blob], editFile.fileName);
+
+      // Rehydrate your owners/tags state exactly as before
+      const dataVehicles = editFile.owners.vehicles.map(v => `${v}`);
+      const dataDrivers  = editFile.owners.drivers .map(d => `${d}`);
+      const dataTrailers = editFile.owners.trailers.map(t => `${t}`);
+      const dataGroups   = editFile.owners.groups  .map(g => `${g}`);
+
+      if (dataGroups.length === 0) {
+        setUploadType('uploadSelection');
+        setSelections({
+          vehicles: [...formatOptions(dataVehicles)],
+          drivers:  [...formatOptions(dataDrivers)],
+          trailers: [...formatOptions(dataTrailers)],
+          groups:   [...formatOptions(dataGroups)],
+        });
+      } else {
+        setUploadType('uploadGroup');
+        const newGroupData = [...geotabData.groups];
+        newGroupData.forEach(g => setCheckedTrue(g, [...formatOptions(dataGroups)]));
+        setGeotabData({ ...geotabData, groups: newGroupData });
+      }
+
+      setUploadData({
+        vehicles: [...formatOptions(dataVehicles)],
+        drivers:  [...formatOptions(dataDrivers)],
+        trailers: [...formatOptions(dataTrailers)],
+        groups:   [...formatOptions(dataGroups)],
+      });
+
+      setUploadFiles([fileToEdit]);
+
+      if (editFile.expiryDate) {
+        setHasExpiry(true);
+        setExpiryDate(dayjs(editFile.expiryDate));
+      } else {
+        setHasExpiry(false);
+      }
+
+ 
+      setEditMode(true);
+      setEditName(editFile.fileName);
+
+      // scroll into view
+      document.getElementById('upload-area')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    } catch (err) {
+      console.error('Error in fetchEditFile:', err);
+    } finally {
+        setEditLoad(false);
+    }
+  };
+
+  fetchEditFile();
+}, [editFile]);
 
 
     return (
         <Box className="geotabToolbar" id="upload-area">
-            {!editMode ? (
+        {editLoad ? (
+            <Box sx={{height: '250px', display: 'flex', justifyContent: 'center', alignItems: 'center'}}> <CircularProgress /></Box>
+        ) : (
+            <>
+ {!editMode ? (
                 <FilePond
                     files={uploadFiles}
                     onupdatefiles={setUploadFiles}
@@ -688,6 +753,9 @@ const Uploader = ({
                     )}
                 </Box>
             </Box>
+            </>
+        )}
+           
         </Box>
     );
 };
